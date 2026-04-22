@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResearchAgent</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+/* ─── Tokens ─────────────────────────────────────────────────────────── */
+:root{
+  --bg:        #F2EDE3;
+  --surface:   #FDFAF4;
+  --surface-2: #EDE7DA;
+  --text:      #1A1714;
+  --muted:     #7A736A;
+  --faint:     #B5AFA6;
+  --green:     #2B5E2A;
+  --green-h:   #1E4520;
+  --green-l:   #E9F2E9;
+  --green-m:   #6A9E69;
+  --gold:      #C9A227;
+  --gold-l:    #F9F1DC;
+  --border:    #DDD7CC;
+  --border-h:  #C5BFB5;
+  --shadow-s:  0 1px 4px rgba(26,23,20,.07);
+  --shadow:    0 2px 14px rgba(26,23,20,.09);
+  --shadow-l:  0 8px 40px rgba(26,23,20,.13);
+  --r:         12px;
+  --r-sm:      8px;
+  --r-lg:      18px;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  line-height:1.55;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:3px}
+
+/* ─── Markdown ───────────────────────────────────────────────────────── */
+.md{line-height:1.65}
+.md h2{font-size:1rem;font-weight:700;color:var(--green);margin:1rem 0 .4rem}
+.md h3{font-size:.9rem;font-weight:700;margin:.7rem 0 .3rem}
+.md p{margin-bottom:.5rem}
+.md ul,.md ol{margin:.3rem 0 .5rem 1.1rem}
+.md li{margin-bottom:.2rem}
+.md strong{font-weight:700}
+.md em{font-style:italic;color:var(--muted)}
+.md a{color:var(--green);text-decoration:underline}
+.md code{
+  background:var(--surface-2);
+  color:var(--green);
+  font-family:ui-monospace,monospace;
+  font-size:.8em;
+  padding:1px 5px;
+  border-radius:4px;
+}
+.md pre{
+  background:#1A1714;
+  color:#90CE8E;
+  font-family:ui-monospace,monospace;
+  font-size:.78rem;
+  padding:.85rem 1rem;
+  border-radius:var(--r-sm);
+  overflow-x:auto;
+  margin:.4rem 0;
+}
+.md pre code{background:transparent;color:inherit;padding:0}
+.md table{border-collapse:collapse;width:100%;margin:.5rem 0;font-size:.78rem}
+.md th{
+  background:var(--green);
+  color:#fff;
+  padding:.45rem .7rem;
+  text-align:left;
+  font-weight:600;
+  border:1px solid var(--green-h);
+  white-space:nowrap;
+}
+.md td{
+  padding:.38rem .7rem;
+  border:1px solid var(--border);
+  vertical-align:top;
+}
+.md tr:nth-child(even) td{background:var(--green-l)}
+
+/* ─── Header ─────────────────────────────────────────────────────────── */
+header{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:.75rem 1.25rem;
+  flex-shrink:0;
+  box-shadow:var(--shadow-s);
+}
+.header-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.65rem}
+.logo-mark{
+  width:34px;height:34px;
+  background:var(--green);
+  border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:1rem;flex-shrink:0;
+}
+.brand-text h1{font-size:.95rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.brand-text p{font-size:.67rem;color:var(--muted);font-weight:500;letter-spacing:.01em}
+.conn-pill{
+  margin-left:auto;
+  display:flex;align-items:center;gap:.4rem;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:.25rem .65rem;
+  font-size:.65rem;
+  font-weight:600;
+  color:var(--muted);
+}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#F59E0B}
+
+/* ─── Progress stepper ───────────────────────────────────────────────── */
+.stepper{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:2px}
+.stepper::-webkit-scrollbar{display:none}
+.step{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
+.step-dot{
+  width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--border);
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:700;
+  color:var(--faint);
+  transition:all .25s;
+}
+.step-lbl{font-size:.6rem;font-weight:600;color:var(--faint);white-space:nowrap;transition:color .25s}
+.step.done .step-dot{background:var(--green);border-color:var(--green);color:#fff}
+.step.done .step-lbl{color:var(--green-m)}
+.step.active .step-dot{
+  background:var(--green);border-color:var(--green);color:#fff;
+  box-shadow:0 0 0 3px var(--green-l);
+}
+.step.active .step-lbl{color:var(--green);font-weight:700}
+.step-line{flex:1;height:2px;background:var(--border);min-width:10px;max-width:36px;margin-bottom:14px;transition:background .25s}
+.step-line.done{background:var(--green-m)}
+
+/* ─── Chat area ──────────────────────────────────────────────────────── */
+#chat{
+  flex:1;
+  overflow-y:auto;
+  padding:1.25rem 1rem;
+  display:flex;
+  flex-direction:column;
+  gap:.85rem;
+}
+
+/* ─── Message bubbles ────────────────────────────────────────────────── */
+.msg-bot{display:flex;gap:.6rem;align-items:flex-start}
+.bot-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.75rem;flex-shrink:0;margin-top:2px;
+  font-weight:700;
+}
+.bubble-bot{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 4px;
+  padding:.75rem 1rem;
+  max-width:82%;
+  box-shadow:var(--shadow-s);
+  font-size:.85rem;
+}
+.msg-user{display:flex;justify-content:flex-end}
+.bubble-user{
+  background:var(--green);
+  color:#fff;
+  border-radius:var(--r-lg) var(--r-lg) 4px var(--r-lg);
+  padding:.7rem 1rem;
+  max-width:75%;
+  font-size:.85rem;
+  font-weight:500;
+}
+.bubble-user .md a{color:#fff}
+.bubble-user .md strong{color:#fff}
+.bubble-user .md code{background:rgba(255,255,255,.15);color:#fff}
+
+/* ─── Status / typing ────────────────────────────────────────────────── */
+.typing-row{display:flex;align-items:center;gap:.5rem;color:var(--muted);font-size:.78rem}
+.dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--green-m);
+  display:inline-block;
+  animation:bop 1.2s ease-in-out infinite;
+}
+.dot:nth-child(2){animation-delay:.18s}
+.dot:nth-child(3){animation-delay:.36s}
+@keyframes bop{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+
+/* ─── Paper cards ────────────────────────────────────────────────────── */
+.papers-wrap{display:flex;flex-direction:column;gap:.5rem}
+.papers-label{
+  font-size:.65rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted);
+  margin-bottom:.15rem;
+}
+.paper-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:.75rem 1rem;
+  transition:border-color .18s,box-shadow .18s;
+}
+.paper-card:hover{border-color:var(--border-h);box-shadow:var(--shadow-s)}
+.paper-num{
+  font-size:.65rem;font-weight:800;color:var(--faint);
+  flex-shrink:0;margin-top:2px;min-width:16px;
+}
+.paper-title{
+  font-size:.87rem;font-weight:700;
+  color:var(--text);
+  line-height:1.35;
+  text-decoration:none;
+  transition:color .15s;
+}
+.paper-title:hover{color:var(--green)}
+.paper-authors{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.badge{
+  display:inline-flex;align-items:center;
+  font-size:.62rem;font-weight:700;
+  padding:2px 8px;border-radius:999px;
+  letter-spacing:.02em;
+}
+.b-arxiv{background:var(--green-l);color:var(--green);border:1px solid #C4DEC3}
+.b-scholar{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.b-blue{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.b-gold{background:var(--gold-l);color:#92670E;border:1px solid #EDD88A}
+.b-gray{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.b-green{background:var(--green-l);color:var(--green);border:1px solid #C4DEC3}
+.paper-abstract{font-size:.75rem;color:var(--muted);line-height:1.55;margin-top:.4rem}
+.paper-links{display:flex;gap:.75rem;margin-top:.5rem}
+.paper-link{font-size:.72rem;font-weight:600;color:var(--green);text-decoration:none;transition:opacity .15s}
+.paper-link:hover{opacity:.7}
+
+/* ─── Matrix ─────────────────────────────────────────────────────────── */
+.matrix-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.matrix-header{
+  background:var(--green);
+  padding:.6rem 1rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.matrix-title{font-size:.72rem;font-weight:800;color:#fff;letter-spacing:.06em;text-transform:uppercase}
+.matrix-body{padding:1rem;overflow-x:auto}
+.dl-btn{
+  display:inline-flex;align-items:center;gap:.35rem;
+  background:#fff;
+  color:var(--green);
+  border:none;
+  border-radius:6px;
+  padding:.3rem .7rem;
+  font-size:.68rem;font-weight:800;
+  cursor:pointer;
+  text-decoration:none;
+  transition:opacity .15s;
+  letter-spacing:.02em;
+}
+.dl-btn:hover{opacity:.85}
+
+/* ─── Template cards ─────────────────────────────────────────────────── */
+.tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
+.tpl-card{
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:var(--r);
+  padding:.6rem .75rem;
+  cursor:pointer;
+  transition:all .15s;
+  user-select:none;
+}
+.tpl-card:hover{border-color:var(--border-h);background:var(--green-l)}
+.tpl-card.selected{border-color:var(--green);background:var(--green-l)}
+.tpl-icon{font-size:1.1rem;margin-bottom:.2rem}
+.tpl-name{font-size:.72rem;font-weight:700;color:var(--text);line-height:1.2}
+.tpl-desc{font-size:.62rem;color:var(--muted);margin-top:.15rem;line-height:1.4}
+
+/* ─── Equation editor ────────────────────────────────────────────────── */
+.eq-code{
+  background:#1A1714;
+  color:#90CE8E;
+  font-family:ui-monospace,monospace;
+  font-size:.78rem;
+  padding:.75rem 1rem;
+  border-radius:var(--r-sm);
+  line-height:1.6;
+  word-break:break-all;
+  margin-bottom:.5rem;
+}
+.eq-explain-toggle{
+  font-size:.68rem;font-weight:600;color:var(--muted);
+  background:none;border:none;cursor:pointer;padding:0;
+  display:flex;align-items:center;gap:.3rem;
+  transition:color .15s;
+}
+.eq-explain-toggle:hover{color:var(--text)}
+.eq-explain-text{
+  font-size:.75rem;color:var(--muted);
+  background:var(--gold-l);
+  border-left:3px solid var(--gold);
+  padding:.5rem .75rem;
+  border-radius:0 var(--r-sm) var(--r-sm) 0;
+  line-height:1.55;
+  margin-top:.4rem;
+}
+
+/* ─── Slider ─────────────────────────────────────────────────────────── */
+input[type=range]{
+  -webkit-appearance:none;
+  appearance:none;
+  height:4px;
+  border-radius:2px;
+  background:var(--border);
+  outline:none;
+  flex:1;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:16px;height:16px;
+  border-radius:50%;
+  background:var(--green);
+  cursor:pointer;
+  border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
+
+/* ─── Input panel ────────────────────────────────────────────────────── */
+#input-panel{
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  padding:.85rem 1rem 1rem;
+  flex-shrink:0;
+  box-shadow:0 -4px 20px rgba(26,23,20,.06);
+}
+.text-input-row{display:flex;gap:.5rem;align-items:flex-end}
+#user-input{
+  flex:1;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  padding:.65rem .9rem;
+  font-family:inherit;
+  font-size:.87rem;
+  color:var(--text);
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  resize:none;
+  line-height:1.4;
+}
+#user-input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-l)}
+#user-input:disabled{opacity:.45;cursor:not-allowed}
+#user-input::placeholder{color:var(--faint)}
+.send-btn{
+  background:var(--green);
+  color:#fff;
+  border:none;
+  border-radius:var(--r);
+  padding:.65rem 1.1rem;
+  font-family:inherit;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:background .15s,transform .1s;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.send-btn:hover{background:var(--green-h)}
+.send-btn:active{transform:scale(.96)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* action buttons */
+.btn-primary{
+  background:var(--green);color:#fff;
+  border:none;border-radius:var(--r-sm);
+  padding:.55rem 1.1rem;
+  font-family:inherit;font-size:.8rem;font-weight:700;
+  cursor:pointer;transition:background .15s;
+}
+.btn-primary:hover{background:var(--green-h)}
+.btn-secondary{
+  background:var(--surface-2);color:var(--text);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:.55rem 1rem;
+  font-family:inherit;font-size:.8rem;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.btn-secondary:hover{border-color:var(--border-h)}
+.btn-row{display:flex;gap:.5rem;margin-top:.5rem}
+
+/* section label */
+.sec-label{
+  font-size:.62rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted);
+  margin-bottom:.45rem;
+}
+
+/* textarea inside panels */
+.panel-textarea{
+  width:100%;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:var(--r-sm);
+  padding:.55rem .8rem;
+  font-family:inherit;
+  font-size:.82rem;
+  color:var(--text);
+  outline:none;
+  resize:none;
+  transition:border-color .15s;
+}
+.panel-textarea:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-l)}
+.panel-textarea::placeholder{color:var(--faint)}
+
+/* ─── Clippy ─────────────────────────────────────────────────────────── */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes blink{0%,88%,100%{transform:scaleY(1)}92%{transform:scaleY(.06)}}
+#clippy-wrap{position:fixed;bottom:5.5rem;right:1rem;z-index:50;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem}
+#clippy-bubble{
+  background:var(--gold-l);
+  border:1.5px solid var(--gold);
+  border-radius:var(--r) var(--r) 0 var(--r);
+  padding:.65rem .85rem;
+  max-width:220px;
+  font-size:.72rem;
+  line-height:1.5;
+  color:#6B4F10;
+  box-shadow:var(--shadow);
+  position:relative;
+}
+.bubble-close{
+  position:absolute;top:.3rem;right:.4rem;
+  background:none;border:none;cursor:pointer;
+  font-size:.75rem;color:var(--gold);
+  line-height:1;padding:0;
+}
+.bubble-close:hover{color:var(--text)}
+#clippy-char{
+  width:48px;height:68px;
+  cursor:pointer;
+  animation:float 3s ease-in-out infinite;
+}
+.c-eyes{animation:blink 4.5s ease-in-out infinite;transform-origin:center 47px}
+
+/* error */
+.err-bubble{
+  background:#FEF2F2;
+  border:1px solid #FECACA;
+  border-radius:var(--r);
+  padding:.65rem .9rem;
+  font-size:.82rem;
+  color:#B91C1C;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ══════════════════════════════════════════ HEADER ══════════════════ -->
+<header>
+  <div class="header-top">
+    <div class="logo-mark">R</div>
+    <div class="brand-text">
+      <h1>ResearchAgent</h1>
+      <p>Asistente Inteligente para Artículos de Investigación</p>
+    </div>
+    <div class="conn-pill">
+      <div class="conn-dot" id="conn-dot"></div>
+      <span id="conn-lbl">Conectando</span>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="stepper">
+    <div class="step active" id="step-ask_needs">
+      <div class="step-dot">1</div>
+      <span class="step-lbl">Tema</span>
+    </div>
+    <div class="step-line" id="ln-0"></div>
+    <div class="step" id="step-adjust_equation">
+      <div class="step-dot">2</div>
+      <span class="step-lbl">Ecuación</span>
+    </div>
+    <div class="step-line" id="ln-1"></div>
+    <div class="step" id="step-fetch_papers">
+      <div class="step-dot">3</div>
+      <span class="step-lbl">Papers</span>
+    </div>
+    <div class="step-line" id="ln-2"></div>
+    <div class="step" id="step-ask_matrix">
+      <div class="step-dot">4</div>
+      <span class="step-lbl">Formato</span>
+    </div>
+    <div class="step-line" id="ln-3"></div>
+    <div class="step" id="step-generate_matrix">
+      <div class="step-dot">5</div>
+      <span class="step-lbl">Matriz</span>
+    </div>
+    <div class="step-line" id="ln-4"></div>
+    <div class="step" id="step-qa">
+      <div class="step-dot">6</div>
+      <span class="step-lbl">Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════ CHAT ════════════════════ -->
+<div id="chat"></div>
+
+<!-- ══════════════════════════════════════════ INPUT PANEL ════════════ -->
+<div id="input-panel">
+
+  <!-- Equation editor -->
+  <div id="eq-block" style="display:none;margin-bottom:.75rem">
+    <p class="sec-label">Ecuación de búsqueda generada</p>
+    <div class="eq-code" id="eq-display"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
+      <button class="eq-explain-toggle" onclick="toggleExplain()">
+        <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" stroke="currentColor" fill="none"/><text x="5" y="7.5" text-anchor="middle" font-size="7" fill="currentColor">?</text></svg>
+        ¿Por qué esta ecuación?
+      </button>
+    </div>
+    <div id="eq-explain" style="display:none">
+      <div class="eq-explain-text" id="eq-explain-text"></div>
+    </div>
+    <div style="margin:.6rem 0">
+      <p class="sec-label" style="margin-bottom:.3rem">Editar ecuación (opcional)</p>
+      <textarea class="panel-textarea" id="eq-editor" rows="2"
+        placeholder="Deja vacío para confirmar tal como está…"></textarea>
+    </div>
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem">
+      <span style="font-size:.72rem;font-weight:600;color:var(--muted);white-space:nowrap">Papers por fuente</span>
+      <input type="range" id="count-slider" min="1" max="20" value="5"
+        oninput="document.getElementById('count-val').textContent=this.value"/>
+      <span style="font-size:.88rem;font-weight:800;color:var(--green);min-width:24px;text-align:center" id="count-val">5</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" style="flex:1" onclick="confirmEquation()">✓ Confirmar ecuación</button>
+      <button class="btn-secondary" style="flex:1" onclick="sendEquation()">Usar mi versión</button>
+    </div>
+  </div>
+
+  <!-- Template selector -->
+  <div id="tpl-block" style="display:none;margin-bottom:.75rem">
+    <p class="sec-label">Plantilla de matriz bibliográfica</p>
+    <div class="tpl-grid" id="tpl-grid"></div>
+    <div style="margin-top:.35rem">
+      <p class="sec-label" style="margin-bottom:.3rem">Personalización (opcional)</p>
+      <textarea class="panel-textarea" id="custom-fmt" rows="2"
+        placeholder="Añade o modifica columnas de la plantilla…"></textarea>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:.5rem" onclick="useTemplate()">
+      Generar matriz →
+    </button>
+  </div>
+
+  <!-- Normal text input -->
+  <div class="text-input-row" id="normal-input">
+    <textarea id="user-input" rows="1"
+      placeholder="Escribe aquí…"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+      oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">Enviar →</button>
+  </div>
+
+</div><!-- /input-panel -->
+
+<!-- ══════════════════════════════════════════ CLIPPY ══════════════════ -->
+<div id="clippy-wrap">
+  <div id="clippy-bubble">
+    <button class="bubble-close" onclick="hideBubble()">×</button>
+    <span id="clippy-msg">¡Hola! Cuéntame sobre tu investigación y construiremos juntos la búsqueda perfecta.</span>
+  </div>
+  <svg id="clippy-char" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 72"
+       onclick="toggleBubble()" title="Clippy">
+    <!-- outer loop -->
+    <path d="M8,65 C8,73 40,73 40,65 L40,20 C40,5 8,5 8,20 Z"
+          fill="none" stroke="#2B5E2A" stroke-width="6.5"
+          stroke-linejoin="round" stroke-linecap="round"/>
+    <!-- inner loop -->
+    <path d="M19,59 L19,27 C19,15 30,15 30,27 L30,56"
+          fill="none" stroke="#2B5E2A" stroke-width="6.5" stroke-linecap="round"/>
+    <!-- face bg -->
+    <circle cx="24" cy="44" r="11" fill="#2B5E2A"/>
+    <!-- eyes -->
+    <g class="c-eyes">
+      <circle cx="20" cy="41" r="2.6" fill="white"/>
+      <circle cx="28" cy="41" r="2.6" fill="white"/>
+      <circle cx="21" cy="42" r="1.3" fill="#1A1714"/>
+      <circle cx="29" cy="42" r="1.3" fill="#1A1714"/>
+    </g>
+    <!-- smile -->
+    <path d="M19,49 Q24,54 29,49" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<!-- ══════════════════════════════════════════ JS ══════════════════════ -->
+<script>
+marked.setOptions({breaks:true,gfm:true});
+
+// ── Globals ────────────────────────────────────────────────────────────
+let ws=null,sessionId=null,selectedTpl="",locked=false,explainOpen=false,bubbleVis=true;
+
+const STEPS=["ask_needs","adjust_equation","fetch_papers","ask_matrix","generate_matrix","qa"];
+const TIPS={
+  ask_needs:"Describe el tema con detalle: disciplina, técnica, aplicación. Más contexto = ecuación más precisa.",
+  adjust_equation:"Usa AND para unir conceptos, OR para sinónimos y NOT para excluir ruido. Las comillas buscan frases exactas.",
+  fetch_papers:"Buscando en ArXiv y Google Scholar. Los papers de ArXiv siempre incluyen PDF.",
+  ask_matrix:"Elige una plantilla con datos bibliométricos (citas, DOI, revista). Puedes personalizar las columnas.",
+  generate_matrix:"Generando tu matriz… al final incluirá un análisis de tendencias.",
+  qa:"Puedo comparar metodologías, resumir hallazgos, identificar brechas o sugerir qué leer primero.",
+};
+
+// ── Bootstrap ──────────────────────────────────────────────────────────
+async function init(){
+  const r=await fetch("/api/session");
+  sessionId=(await r.json()).session_id;
+  connectWS();
+}
+
+function connectWS(){
+  const proto=location.protocol==="https:"?"wss":"ws";
+  ws=new WebSocket(`${proto}://${location.host}/ws/${sessionId}`);
+  ws.onopen=()=>setConn("var(--green)","Conectado");
+  ws.onclose=()=>{setConn("#EF4444","Desconectado");setTimeout(connectWS,3000)};
+  ws.onerror=()=>setConn("#EF4444","Error");
+  ws.onmessage=ev=>handle(JSON.parse(ev.data));
+}
+
+function setConn(color,label){
+  document.getElementById("conn-dot").style.background=color;
+  document.getElementById("conn-lbl").textContent=label;
+}
+
+// ── Message router ─────────────────────────────────────────────────────
+function handle(msg){
+  removeTyping();
+  switch(msg.type){
+    case "status":
+      addTyping(msg.content); break;
+
+    case "question":
+      setStage("ask_needs");
+      addBot(msg.content);
+      showNormal("¿Cuál es tu tema de investigación?");
+      break;
+
+    case "equation":
+      setStage("adjust_equation");
+      addBot(msg.content);
+      openEquationEditor(msg.equation,msg.explanation||"");
+      break;
+
+    case "papers":
+      setStage("fetch_papers");
+      addPapers(msg.papers||[]);
+      addBot(msg.content);
+      setStage("ask_matrix");
+      openTemplateSelector(msg.templates||[]);
+      break;
+
+    case "qa":
+      setStage("qa");
+      if(msg.last_answer) addBot(msg.last_answer);
+      if(msg.show_matrix&&msg.matrix) addMatrix(msg.matrix);
+      showNormal("Haz una pregunta sobre los artículos…");
+      break;
+
+    case "error":
+      addError(msg.content);
+      showNormal();
+      break;
+
+    case "complete":
+      addBot("Sesión completada. Recarga la página para comenzar de nuevo.");
+      lock();
+      break;
+  }
+}
+
+// ── Send ───────────────────────────────────────────────────────────────
+function sendMessage(){
+  if(locked)return;
+  const el=document.getElementById("user-input");
+  const txt=el.value.trim();
+  if(!txt)return;
+  addUser(txt);
+  wsSend({type:"response",content:txt});
+  el.value="";
+  autoResize(el);
+  lock();
+}
+
+function confirmEquation(){
+  const count=parseInt(document.getElementById("count-slider").value)||5;
+  addUser(`Ecuación confirmada · ${count} papers por fuente`);
+  closeEquationEditor();
+  wsSend({type:"response",content:"confirmar",count});
+  lock();
+}
+
+function sendEquation(){
+  const eq=document.getElementById("eq-editor").value.trim();
+  const count=parseInt(document.getElementById("count-slider").value)||5;
+  if(!eq){confirmEquation();return;}
+  addUser(`Ecuación personalizada · ${count} papers por fuente`);
+  closeEquationEditor();
+  wsSend({type:"response",content:eq,count});
+  lock();
+}
+
+function useTemplate(){
+  const custom=document.getElementById("custom-fmt").value.trim();
+  const name=document.querySelector(".tpl-card.selected .tpl-name")?.textContent||"Plantilla personalizada";
+  addUser(`Plantilla: ${name}${custom?" + personalización":""}`);
+  closeTemplateSelector();
+  wsSend({type:"response",content:custom,template_id:selectedTpl});
+  lock();
+}
+
+function wsSend(obj){
+  if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj));
+}
+
+// ── Panel visibility ───────────────────────────────────────────────────
+function showNormal(ph){
+  hide("eq-block");hide("tpl-block");show("normal-input");
+  unlock(ph);
+}
+function openEquationEditor(eq,exp){
+  document.getElementById("eq-display").textContent=eq||"";
+  document.getElementById("eq-editor").value="";
+  document.getElementById("eq-editor").placeholder=eq||"";
+  document.getElementById("eq-explain-text").textContent=exp||"";
+  document.getElementById("eq-explain").style.display="none";
+  explainOpen=false;
+  show("eq-block");hide("normal-input");hide("tpl-block");
+}
+function closeEquationEditor(){hide("eq-block");show("normal-input")}
+function openTemplateSelector(templates){
+  const grid=document.getElementById("tpl-grid");
+  grid.innerHTML="";
+  selectedTpl="";
+  templates.forEach(t=>{
+    const d=document.createElement("div");
+    d.className="tpl-card";
+    d.dataset.id=t.id;
+    d.innerHTML=`<div class="tpl-icon">${t.icon}</div><div class="tpl-name">${esc(t.name)}</div><div class="tpl-desc">${esc(t.description)}</div>`;
+    d.onclick=()=>{
+      document.querySelectorAll(".tpl-card").forEach(c=>c.classList.remove("selected"));
+      d.classList.add("selected");
+      selectedTpl=t.id;
+    };
+    grid.appendChild(d);
+  });
+  document.getElementById("custom-fmt").value="";
+  show("tpl-block");hide("normal-input");hide("eq-block");
+}
+function closeTemplateSelector(){hide("tpl-block");show("normal-input")}
+function toggleExplain(){
+  explainOpen=!explainOpen;
+  document.getElementById("eq-explain").style.display=explainOpen?"block":"none";
+}
+
+// ── Lock / unlock ──────────────────────────────────────────────────────
+function lock(){
+  locked=true;
+  document.getElementById("user-input").disabled=true;
+  document.getElementById("send-btn").disabled=true;
+}
+function unlock(ph){
+  locked=false;
+  const el=document.getElementById("user-input");
+  el.disabled=false;
+  document.getElementById("send-btn").disabled=false;
+  if(ph)el.placeholder=ph;
+  el.focus();
+}
+
+// ── Render helpers ─────────────────────────────────────────────────────
+function chatEl(){return document.getElementById("chat")}
+function scroll(){const c=chatEl();c.scrollTop=c.scrollHeight}
+
+function addBot(text){
+  if(!text)return;
+  const w=document.createElement("div");
+  w.className="msg-bot";
+  w.innerHTML=`<div class="bot-avatar">RA</div><div class="bubble-bot md">${marked.parse(text)}</div>`;
+  chatEl().appendChild(w);scroll();
+}
+
+function addUser(text){
+  const w=document.createElement("div");
+  w.className="msg-user";
+  w.innerHTML=`<div class="bubble-user md">${marked.parse(text)}</div>`;
+  chatEl().appendChild(w);scroll();
+}
+
+function addError(text){
+  const w=document.createElement("div");
+  w.innerHTML=`<div class="err-bubble">⚠ ${esc(text)}</div>`;
+  chatEl().appendChild(w);scroll();
+}
+
+function addTyping(text){
+  const w=document.createElement("div");
+  w.id="typing";w.className="typing-row";
+  w.innerHTML=`<span>${esc(text||"Procesando")}</span><span class="dot"></span><span class="dot"></span><span class="dot"></span>`;
+  chatEl().appendChild(w);scroll();
+}
+function removeTyping(){document.getElementById("typing")?.remove()}
+
+function addPapers(papers){
+  if(!papers.length)return;
+  const wrap=document.createElement("div");
+  wrap.className="papers-wrap";
+  wrap.innerHTML=`<p class="papers-label">${papers.length} artículos encontrados</p>`;
+  papers.forEach((p,i)=>{
+    const isArxiv=p.source==="ArXiv";
+    const card=document.createElement("div");
+    card.className="paper-card";
+    card.innerHTML=`
+      <div style="display:flex;gap:.5rem;align-items:flex-start">
+        <span class="paper-num">${i+1}</span>
+        <div style="flex:1;min-width:0">
+          <a class="paper-title" href="${p.url||"#"}" target="_blank" rel="noopener">${esc(p.title)}</a>
+          <p class="paper-authors">${esc(p.authors||"")}${p.year?" · "+esc(p.year):""}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin:.4rem 0">
+            <span class="badge ${isArxiv?"b-arxiv":"b-scholar"}">${esc(p.source)}</span>
+            ${p.citations&&p.citations!=="N/D"?`<span class="badge b-blue">📊 ${esc(p.citations)} citas</span>`:""}
+            ${p.open_access==="Sí"?`<span class="badge b-green">🔓 Open</span>`:""}
+            ${p.journal?`<span class="badge b-gray">${esc(p.journal.substring(0,28))}${p.journal.length>28?"…":""}</span>`:""}
+            ${p.doi?`<span class="badge b-gold">DOI</span>`:""}
+          </div>
+          ${p.abstract?`<p class="paper-abstract">${esc(p.abstract.substring(0,200))}${p.abstract.length>200?"…":""}</p>`:""}
+          <div class="paper-links">
+            ${p.url?`<a class="paper-link" href="${p.url}" target="_blank" rel="noopener">Ver artículo →</a>`:""}
+            ${p.pdf_url?`<a class="paper-link" href="${p.pdf_url}" target="_blank" rel="noopener" style="color:var(--gold)">PDF ↓</a>`:""}
+          </div>
+        </div>
+      </div>`;
+    wrap.appendChild(card);
+  });
+  chatEl().appendChild(wrap);scroll();
+}
+
+function addMatrix(md){
+  const wrap=document.createElement("div");
+  wrap.className="matrix-card";
+  wrap.innerHTML=`
+    <div class="matrix-header">
+      <span class="matrix-title">📊 Matriz Bibliográfica</span>
+      <a class="dl-btn" href="/api/download/xlsx/${sessionId}" target="_blank">↓ XLSX</a>
+    </div>
+    <div class="matrix-body md">${marked.parse(md)}</div>`;
+  chatEl().appendChild(wrap);scroll();
+}
+
+// ── Stage progress ─────────────────────────────────────────────────────
+function setStage(stage){
+  const idx=STEPS.indexOf(stage);
+  STEPS.forEach((s,i)=>{
+    const el=document.getElementById("step-"+s);
+    if(!el)return;
+    el.classList.remove("active","done");
+    if(i<idx)el.classList.add("done");
+    else if(i===idx)el.classList.add("active");
+    const ln=document.getElementById("ln-"+i);
+    if(ln)ln.classList.toggle("done",i<idx);
+  });
+  const tip=TIPS[stage];
+  if(tip){
+    document.getElementById("clippy-msg").textContent=tip;
+    showBubble();
+  }
+}
+
+// ── Clippy ─────────────────────────────────────────────────────────────
+function toggleBubble(){bubbleVis?hideBubble():showBubble()}
+function showBubble(){bubbleVis=true;document.getElementById("clippy-bubble").style.display=""}
+function hideBubble(){bubbleVis=false;document.getElementById("clippy-bubble").style.display="none"}
+
+// ── Utilities ──────────────────────────────────────────────────────────
+function show(id){document.getElementById(id).style.display=""}
+function hide(id){document.getElementById(id).style.display="none"}
+function esc(s){
+  return String(s||"")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function autoResize(el){
+  el.style.height="auto";
+  el.style.height=Math.min(el.scrollHeight,120)+"px";
+}
+
+init();
+</script>
+</body>
+</html>

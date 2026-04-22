@@ -70,9 +70,10 @@ STATUS_BY_TYPE = {
 # XLSX download
 # ---------------------------------------------------------------------------
 
-HDR_FILL = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
-HDR_FONT = Font(color="93c5fd", bold=True)
-ALT_FILL = PatternFill(start_color="0f2137", end_color="0f2137", fill_type="solid")
+HDR_FILL = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid")
+HDR_FONT = Font(color="1E40AF", bold=True)
+ALT_FILL = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")
+ALT_FONT = Font(color="1E293B")
 WRAP = Alignment(wrap_text=True, vertical="top")
 
 
@@ -126,6 +127,7 @@ async def download_xlsx(session_id: str):
             cell.alignment = WRAP
             if i % 2 == 0:
                 cell.fill = ALT_FILL
+                cell.font = ALT_FONT
 
     # ── Sheet 2: Matriz ─────────────────────────────────────────────────────
     ws2 = wb.create_sheet("Matriz Bibliográfica")
@@ -140,6 +142,7 @@ async def download_xlsx(session_id: str):
                     cell.font = HDR_FONT
                 elif r % 2 == 0:
                     cell.fill = ALT_FILL
+                    cell.font = ALT_FONT
         max_col = max((len(r) for r in rows), default=1)
         for c in range(1, max_col + 1):
             ws2.column_dimensions[get_column_letter(c)].width = 28

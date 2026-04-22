@@ -3,922 +3,1598 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>ResearchAgent</title>
-
+<title>Science Agent — Investigación Bibliográfica con IA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
 <style>
-/* ─── Tokens ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════ TOKENS ═══════════════════════════════ */
 :root{
-  --bg:        #F2EDE3;
-  --surface:   #FDFAF4;
-  --surface-2: #EDE7DA;
-  --text:      #1A1714;
-  --muted:     #7A736A;
-  --faint:     #B5AFA6;
-  --green:     #2B5E2A;
-  --green-h:   #1E4520;
-  --green-l:   #E9F2E9;
-  --green-m:   #6A9E69;
-  --gold:      #C9A227;
-  --gold-l:    #F9F1DC;
-  --border:    #DDD7CC;
-  --border-h:  #C5BFB5;
-  --shadow-s:  0 1px 4px rgba(26,23,20,.07);
-  --shadow:    0 2px 14px rgba(26,23,20,.09);
-  --shadow-l:  0 8px 40px rgba(26,23,20,.13);
-  --r:         12px;
-  --r-sm:      8px;
-  --r-lg:      18px;
+  --bg:        #F0F6FF;
+  --surface:   #FFFFFF;
+  --surf2:     #EFF6FF;
+  --surf3:     #DBEAFE;
+  --text:      #0F172A;
+  --muted:     #475569;
+  --faint:     #94A3B8;
+  --border:    #CBD5E1;
+  --border-h:  #94A3B8;
+
+  --blue:      #1D4ED8;
+  --blue-h:    #1E40AF;
+  --blue-l:    #DBEAFE;
+  --blue-m:    #3B82F6;
+  --blue-xl:   #EFF6FF;
+  --sky:       #0EA5E9;
+  --sky-l:     #E0F2FE;
+  --violet:    #7C3AED;
+  --violet-l:  #EDE9FE;
+  --green:     #059669;
+  --green-l:   #D1FAE5;
+  --amber:     #D97706;
+  --amber-l:   #FEF3C7;
+  --red:       #DC2626;
+
+  --sh-s: 0 1px 4px rgba(15,23,42,.06);
+  --sh:   0 2px 12px rgba(15,23,42,.09);
+  --sh-l: 0 8px 32px rgba(15,23,42,.13);
+
+  --r:    12px;
+  --r-sm: 8px;
+  --r-lg: 18px;
+  --nav-h: 64px;
 }
 
-/* ─── Base ───────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════ RESET ════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
 body{
-  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  font-family:'Inter',system-ui,sans-serif;
   background:var(--bg);
   color:var(--text);
   font-size:14px;
-  line-height:1.55;
-  display:flex;
-  flex-direction:column;
+  line-height:1.6;
 }
-
-/* ─── Scrollbar ──────────────────────────────────────────────────────── */
-::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:3px}
 
-/* ─── Markdown ───────────────────────────────────────────────────────── */
+/* ═══════════════════════════════ NAV ══════════════════════════════════ */
+#top-nav{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--nav-h);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--sh-s);
+  z-index:200;
+  display:flex;align-items:center;
+  padding:0 1.5rem;gap:1.5rem;
+}
+.nav-brand{display:flex;align-items:center;gap:.6rem;flex-shrink:0}
+.nav-logo{
+  width:38px;height:38px;
+  background:linear-gradient(135deg,var(--blue) 0%,var(--sky) 100%);
+  border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.95rem;font-weight:800;letter-spacing:-.02em;
+  box-shadow:0 2px 8px rgba(29,78,216,.35);
+}
+.nav-brand-name{font-size:.95rem;font-weight:800;letter-spacing:-.025em;color:var(--text)}
+.nav-brand-sub{font-size:.6rem;color:var(--muted);font-weight:500}
+.nav-links{display:flex;gap:.15rem;flex:1}
+.nav-link{
+  background:none;border:none;
+  padding:.4rem .8rem;border-radius:var(--r-sm);
+  font-family:inherit;font-size:.78rem;font-weight:600;
+  color:var(--muted);cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;gap:.35rem;
+  white-space:nowrap;
+}
+.nav-link:hover{background:var(--surf2);color:var(--text)}
+.nav-link.active{background:var(--blue-l);color:var(--blue)}
+.nav-actions{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+.conn-pill{
+  display:flex;align-items:center;gap:.35rem;
+  background:var(--surf2);border:1px solid var(--border);
+  border-radius:999px;padding:.25rem .65rem;
+  font-size:.65rem;font-weight:600;color:var(--muted);
+}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--amber)}
+
+/* ═══════════════════════════════ APP / PAGES ══════════════════════════ */
+#app{
+  margin-top:var(--nav-h);
+  height:calc(100vh - var(--nav-h));
+  overflow:hidden;
+  position:relative;
+}
+.page{display:none;height:100%;flex-direction:column}
+.page.active{display:flex}
+#page-chat.active{overflow:hidden}
+#page-graph.active,#page-stats.active,#page-explorer.active,#page-home.active,#page-about.active{overflow-y:auto}
+
+/* ═══════════════════════════════ PAGE HERO ════════════════════════════ */
+.page-hero{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--sky) 100%);
+  padding:2rem 2rem 1.75rem;color:#fff;flex-shrink:0;
+}
+.page-hero h2{font-size:1.45rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.3rem}
+.page-hero p{font-size:.85rem;opacity:.85}
+
+/* ═══════════════════════════════ STEPPER ══════════════════════════════ */
+.stepper-bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.55rem 1.25rem;flex-shrink:0;
+  display:flex;align-items:center;gap:0;overflow-x:auto;
+}
+.stepper-bar::-webkit-scrollbar{display:none}
+.step{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
+.step-dot{
+  width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:700;color:var(--faint);transition:all .25s;
+}
+.step-lbl{font-size:.6rem;font-weight:600;color:var(--faint);white-space:nowrap}
+.step.done .step-dot{background:var(--blue);border-color:var(--blue);color:#fff}
+.step.done .step-lbl{color:var(--blue-m)}
+.step.active .step-dot{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 0 0 3px var(--blue-l)}
+.step.active .step-lbl{color:var(--blue);font-weight:700}
+.step-line{flex:1;height:2px;background:var(--border);min-width:10px;max-width:36px;margin-bottom:14px;transition:background .25s}
+.step-line.done{background:var(--blue-m)}
+
+/* ═══════════════════════════════ CHAT ══════════════════════════════════ */
+#chat{
+  flex:1;overflow-y:auto;
+  padding:1.25rem 1rem;
+  display:flex;flex-direction:column;gap:.85rem;
+}
+
+/* ═══════════════════════════════ MARKDOWN ═════════════════════════════ */
 .md{line-height:1.65}
-.md h2{font-size:1rem;font-weight:700;color:var(--green);margin:1rem 0 .4rem}
+.md h2{font-size:1rem;font-weight:700;color:var(--blue);margin:1rem 0 .4rem}
 .md h3{font-size:.9rem;font-weight:700;margin:.7rem 0 .3rem}
 .md p{margin-bottom:.5rem}
 .md ul,.md ol{margin:.3rem 0 .5rem 1.1rem}
 .md li{margin-bottom:.2rem}
 .md strong{font-weight:700}
 .md em{font-style:italic;color:var(--muted)}
-.md a{color:var(--green);text-decoration:underline}
-.md code{
-  background:var(--surface-2);
-  color:var(--green);
-  font-family:ui-monospace,monospace;
-  font-size:.8em;
-  padding:1px 5px;
-  border-radius:4px;
-}
-.md pre{
-  background:#1A1714;
-  color:#90CE8E;
-  font-family:ui-monospace,monospace;
-  font-size:.78rem;
-  padding:.85rem 1rem;
-  border-radius:var(--r-sm);
-  overflow-x:auto;
-  margin:.4rem 0;
-}
+.md a{color:var(--blue);text-decoration:underline}
+.md code{background:var(--surf2);color:var(--blue);font-family:ui-monospace,monospace;font-size:.8em;padding:1px 5px;border-radius:4px}
+.md pre{background:#0F172A;color:#93C5FD;font-family:ui-monospace,monospace;font-size:.78rem;padding:.85rem 1rem;border-radius:var(--r-sm);overflow-x:auto;margin:.4rem 0}
 .md pre code{background:transparent;color:inherit;padding:0}
 .md table{border-collapse:collapse;width:100%;margin:.5rem 0;font-size:.78rem}
-.md th{
-  background:var(--green);
-  color:#fff;
-  padding:.45rem .7rem;
-  text-align:left;
-  font-weight:600;
-  border:1px solid var(--green-h);
-  white-space:nowrap;
-}
-.md td{
-  padding:.38rem .7rem;
-  border:1px solid var(--border);
-  vertical-align:top;
-}
-.md tr:nth-child(even) td{background:var(--green-l)}
+.md th{background:var(--blue);color:#fff;padding:.45rem .7rem;text-align:left;font-weight:600;border:1px solid var(--blue-h);white-space:nowrap}
+.md td{padding:.4rem .7rem;border:1px solid var(--border);vertical-align:top}
+.md tr:nth-child(even) td{background:var(--blue-xl)}
 
-/* ─── Header ─────────────────────────────────────────────────────────── */
-header{
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  padding:.75rem 1.25rem;
-  flex-shrink:0;
-  box-shadow:var(--shadow-s);
-}
-.header-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.65rem}
-.logo-mark{
-  width:34px;height:34px;
-  background:var(--green);
-  border-radius:var(--r-sm);
-  display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:1rem;flex-shrink:0;
-}
-.brand-text h1{font-size:.95rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
-.brand-text p{font-size:.67rem;color:var(--muted);font-weight:500;letter-spacing:.01em}
-.conn-pill{
-  margin-left:auto;
-  display:flex;align-items:center;gap:.4rem;
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:999px;
-  padding:.25rem .65rem;
-  font-size:.65rem;
-  font-weight:600;
-  color:var(--muted);
-}
-.conn-dot{width:7px;height:7px;border-radius:50%;background:#F59E0B}
-
-/* ─── Progress stepper ───────────────────────────────────────────────── */
-.stepper{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:2px}
-.stepper::-webkit-scrollbar{display:none}
-.step{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
-.step-dot{
-  width:26px;height:26px;border-radius:50%;
-  border:2px solid var(--border);
-  background:var(--surface);
-  display:flex;align-items:center;justify-content:center;
-  font-size:.65rem;font-weight:700;
-  color:var(--faint);
-  transition:all .25s;
-}
-.step-lbl{font-size:.6rem;font-weight:600;color:var(--faint);white-space:nowrap;transition:color .25s}
-.step.done .step-dot{background:var(--green);border-color:var(--green);color:#fff}
-.step.done .step-lbl{color:var(--green-m)}
-.step.active .step-dot{
-  background:var(--green);border-color:var(--green);color:#fff;
-  box-shadow:0 0 0 3px var(--green-l);
-}
-.step.active .step-lbl{color:var(--green);font-weight:700}
-.step-line{flex:1;height:2px;background:var(--border);min-width:10px;max-width:36px;margin-bottom:14px;transition:background .25s}
-.step-line.done{background:var(--green-m)}
-
-/* ─── Chat area ──────────────────────────────────────────────────────── */
-#chat{
-  flex:1;
-  overflow-y:auto;
-  padding:1.25rem 1rem;
-  display:flex;
-  flex-direction:column;
-  gap:.85rem;
-}
-
-/* ─── Message bubbles ────────────────────────────────────────────────── */
+/* ═══════════════════════════════ BUBBLES ══════════════════════════════ */
 .msg-bot{display:flex;gap:.6rem;align-items:flex-start}
 .bot-avatar{
-  width:28px;height:28px;border-radius:50%;
-  background:var(--green);
+  width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--sky));
   display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:.75rem;flex-shrink:0;margin-top:2px;
-  font-weight:700;
+  color:#fff;font-size:.65rem;font-weight:800;flex-shrink:0;margin-top:2px;
 }
 .bubble-bot{
-  background:var(--surface);
-  border:1px solid var(--border);
+  background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 4px;
-  padding:.75rem 1rem;
-  max-width:82%;
-  box-shadow:var(--shadow-s);
-  font-size:.85rem;
+  padding:.75rem 1rem;max-width:82%;
+  box-shadow:var(--sh-s);font-size:.85rem;
 }
 .msg-user{display:flex;justify-content:flex-end}
 .bubble-user{
-  background:var(--green);
+  background:linear-gradient(135deg,var(--blue),var(--sky));
   color:#fff;
   border-radius:var(--r-lg) var(--r-lg) 4px var(--r-lg);
-  padding:.7rem 1rem;
-  max-width:75%;
-  font-size:.85rem;
-  font-weight:500;
+  padding:.7rem 1rem;max-width:75%;
+  font-size:.85rem;font-weight:500;
 }
-.bubble-user .md a{color:#fff}
-.bubble-user .md strong{color:#fff}
-.bubble-user .md code{background:rgba(255,255,255,.15);color:#fff}
 
-/* ─── Status / typing ────────────────────────────────────────────────── */
+/* ═══════════════════════════════ TYPING ═══════════════════════════════ */
 .typing-row{display:flex;align-items:center;gap:.5rem;color:var(--muted);font-size:.78rem}
-.dot{
-  width:5px;height:5px;border-radius:50%;
-  background:var(--green-m);
-  display:inline-block;
-  animation:bop 1.2s ease-in-out infinite;
-}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--blue-m);display:inline-block;animation:bop 1.2s ease-in-out infinite}
 .dot:nth-child(2){animation-delay:.18s}
 .dot:nth-child(3){animation-delay:.36s}
 @keyframes bop{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
 
-/* ─── Paper cards ────────────────────────────────────────────────────── */
+/* ═══════════════════════════════ PAPER CARDS ══════════════════════════ */
 .papers-wrap{display:flex;flex-direction:column;gap:.5rem}
-.papers-label{
-  font-size:.65rem;font-weight:800;
-  text-transform:uppercase;letter-spacing:.1em;
-  color:var(--muted);
-  margin-bottom:.15rem;
-}
+.papers-label{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.15rem}
 .paper-card{
   background:var(--surface);
-  border:1px solid var(--border);
+  border:1.5px solid var(--border);
   border-radius:var(--r);
   padding:.75rem 1rem;
-  transition:border-color .18s,box-shadow .18s;
+  transition:border-color .18s,box-shadow .18s,transform .15s;
+  position:relative;overflow:hidden;
 }
-.paper-card:hover{border-color:var(--border-h);box-shadow:var(--shadow-s)}
-.paper-num{
-  font-size:.65rem;font-weight:800;color:var(--faint);
-  flex-shrink:0;margin-top:2px;min-width:16px;
+.paper-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:transparent;border-radius:3px 0 0 3px;transition:background .2s;
 }
-.paper-title{
-  font-size:.87rem;font-weight:700;
-  color:var(--text);
-  line-height:1.35;
-  text-decoration:none;
-  transition:color .15s;
+.paper-card:hover{border-color:var(--blue-m);box-shadow:var(--sh);transform:translateY(-1px)}
+.paper-card:hover::before{background:var(--blue-m)}
+.paper-card.highlighted{
+  border-color:var(--blue);
+  background:linear-gradient(135deg,#fff 80%,var(--blue-xl) 100%);
+  box-shadow:0 0 0 2px var(--blue-l),var(--sh);
 }
-.paper-title:hover{color:var(--green)}
+.paper-card.highlighted::before{background:var(--blue)}
+.paper-card.top-cited{border-color:var(--amber)}
+.paper-card.top-cited::before{background:var(--amber)}
+.paper-num{font-size:.65rem;font-weight:800;color:var(--faint);flex-shrink:0;margin-top:2px;min-width:22px}
+.paper-title{font-size:.87rem;font-weight:700;color:var(--text);line-height:1.35;text-decoration:none;transition:color .15s}
+.paper-title:hover{color:var(--blue)}
 .paper-authors{font-size:.72rem;color:var(--muted);margin-top:.2rem}
-.badge{
-  display:inline-flex;align-items:center;
-  font-size:.62rem;font-weight:700;
-  padding:2px 8px;border-radius:999px;
-  letter-spacing:.02em;
-}
-.b-arxiv{background:var(--green-l);color:var(--green);border:1px solid #C4DEC3}
-.b-scholar{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
-.b-blue{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
-.b-gold{background:var(--gold-l);color:#92670E;border:1px solid #EDD88A}
-.b-gray{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
-.b-green{background:var(--green-l);color:var(--green);border:1px solid #C4DEC3}
-.paper-abstract{font-size:.75rem;color:var(--muted);line-height:1.55;margin-top:.4rem}
+.badge{display:inline-flex;align-items:center;font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.02em}
+.b-arxiv{background:var(--sky-l);color:#0369A1;border:1px solid #BAE6FD}
+.b-scholar{background:var(--violet-l);color:var(--violet);border:1px solid #DDD6FE}
+.b-blue{background:var(--blue-l);color:var(--blue);border:1px solid #BFDBFE}
+.b-green{background:var(--green-l);color:#065F46;border:1px solid #6EE7B7}
+.b-amber{background:var(--amber-l);color:#92400E;border:1px solid #FCD34D}
+.b-gray{background:var(--surf2);color:var(--muted);border:1px solid var(--border)}
+.paper-abstract{font-size:.76rem;color:var(--muted);line-height:1.6;margin-top:.4rem}
 .paper-links{display:flex;gap:.75rem;margin-top:.5rem}
-.paper-link{font-size:.72rem;font-weight:600;color:var(--green);text-decoration:none;transition:opacity .15s}
+.paper-link{font-size:.72rem;font-weight:600;color:var(--blue);text-decoration:none;transition:opacity .15s}
 .paper-link:hover{opacity:.7}
+.paper-link.pdf{color:var(--sky)}
+.paper-link.doi-link{color:var(--amber)}
 
-/* ─── Matrix ─────────────────────────────────────────────────────────── */
-.matrix-card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  overflow:hidden;
-  box-shadow:var(--shadow);
-}
+/* ═══════════════════════════════ MATRIX ═══════════════════════════════ */
+.matrix-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
 .matrix-header{
-  background:var(--green);
-  padding:.6rem 1rem;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+  background:linear-gradient(90deg,var(--blue) 0%,var(--sky) 100%);
+  padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;
 }
 .matrix-title{font-size:.72rem;font-weight:800;color:#fff;letter-spacing:.06em;text-transform:uppercase}
 .matrix-body{padding:1rem;overflow-x:auto}
 .dl-btn{
   display:inline-flex;align-items:center;gap:.35rem;
-  background:#fff;
-  color:var(--green);
-  border:none;
-  border-radius:6px;
-  padding:.3rem .7rem;
-  font-size:.68rem;font-weight:800;
-  cursor:pointer;
-  text-decoration:none;
-  transition:opacity .15s;
+  background:rgba(255,255,255,.15);color:#fff;
+  border:1px solid rgba(255,255,255,.3);border-radius:6px;
+  padding:.3rem .7rem;font-size:.68rem;font-weight:700;
+  cursor:pointer;text-decoration:none;transition:background .15s;
   letter-spacing:.02em;
 }
-.dl-btn:hover{opacity:.85}
+.dl-btn:hover{background:rgba(255,255,255,.28)}
 
-/* ─── Template cards ─────────────────────────────────────────────────── */
+/* ═══════════════════════════════ TEMPLATES ════════════════════════════ */
 .tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
 .tpl-card{
-  background:var(--surface);
-  border:2px solid var(--border);
-  border-radius:var(--r);
-  padding:.6rem .75rem;
-  cursor:pointer;
-  transition:all .15s;
-  user-select:none;
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:var(--r);padding:.6rem .75rem;
+  cursor:pointer;transition:all .15s;user-select:none;
 }
-.tpl-card:hover{border-color:var(--border-h);background:var(--green-l)}
-.tpl-card.selected{border-color:var(--green);background:var(--green-l)}
+.tpl-card:hover{border-color:var(--blue-m);background:var(--blue-xl)}
+.tpl-card.selected{border-color:var(--blue);background:var(--blue-l)}
 .tpl-icon{font-size:1.1rem;margin-bottom:.2rem}
 .tpl-name{font-size:.72rem;font-weight:700;color:var(--text);line-height:1.2}
 .tpl-desc{font-size:.62rem;color:var(--muted);margin-top:.15rem;line-height:1.4}
 
-/* ─── Equation editor ────────────────────────────────────────────────── */
+/* ═══════════════════════════════ EQUATION EDITOR ══════════════════════ */
 .eq-code{
-  background:#1A1714;
-  color:#90CE8E;
-  font-family:ui-monospace,monospace;
-  font-size:.78rem;
-  padding:.75rem 1rem;
-  border-radius:var(--r-sm);
-  line-height:1.6;
-  word-break:break-all;
-  margin-bottom:.5rem;
+  background:#0F172A;color:#93C5FD;
+  font-family:ui-monospace,monospace;font-size:.78rem;
+  padding:.75rem 1rem;border-radius:var(--r-sm);
+  line-height:1.6;word-break:break-all;margin-bottom:.5rem;
 }
 .eq-explain-toggle{
   font-size:.68rem;font-weight:600;color:var(--muted);
   background:none;border:none;cursor:pointer;padding:0;
-  display:flex;align-items:center;gap:.3rem;
-  transition:color .15s;
+  display:flex;align-items:center;gap:.3rem;transition:color .15s;
 }
 .eq-explain-toggle:hover{color:var(--text)}
 .eq-explain-text{
   font-size:.75rem;color:var(--muted);
-  background:var(--gold-l);
-  border-left:3px solid var(--gold);
-  padding:.5rem .75rem;
-  border-radius:0 var(--r-sm) var(--r-sm) 0;
-  line-height:1.55;
-  margin-top:.4rem;
+  background:var(--blue-xl);border-left:3px solid var(--blue-m);
+  padding:.5rem .75rem;border-radius:0 var(--r-sm) var(--r-sm) 0;
+  line-height:1.55;margin-top:.4rem;
 }
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;flex:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 
-/* ─── Slider ─────────────────────────────────────────────────────────── */
-input[type=range]{
-  -webkit-appearance:none;
-  appearance:none;
-  height:4px;
-  border-radius:2px;
-  background:var(--border);
-  outline:none;
-  flex:1;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;
-  width:16px;height:16px;
-  border-radius:50%;
-  background:var(--green);
-  cursor:pointer;
-  border:2px solid #fff;
-  box-shadow:0 1px 4px rgba(0,0,0,.2);
-}
-
-/* ─── Input panel ────────────────────────────────────────────────────── */
+/* ═══════════════════════════════ INPUT PANEL ══════════════════════════ */
 #input-panel{
-  background:var(--surface);
-  border-top:1px solid var(--border);
-  padding:.85rem 1rem 1rem;
-  flex-shrink:0;
-  box-shadow:0 -4px 20px rgba(26,23,20,.06);
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:.85rem 1rem 1rem;flex-shrink:0;
+  box-shadow:0 -4px 20px rgba(15,23,42,.06);
 }
 .text-input-row{display:flex;gap:.5rem;align-items:flex-end}
 #user-input{
-  flex:1;
-  background:var(--bg);
-  border:1.5px solid var(--border);
-  border-radius:var(--r);
-  padding:.65rem .9rem;
-  font-family:inherit;
-  font-size:.87rem;
-  color:var(--text);
-  outline:none;
-  transition:border-color .15s,box-shadow .15s;
-  resize:none;
-  line-height:1.4;
+  flex:1;background:var(--bg);
+  border:1.5px solid var(--border);border-radius:var(--r);
+  padding:.65rem .9rem;font-family:inherit;font-size:.87rem;color:var(--text);
+  outline:none;transition:border-color .15s,box-shadow .15s;resize:none;line-height:1.4;
 }
-#user-input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-l)}
+#user-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
 #user-input:disabled{opacity:.45;cursor:not-allowed}
 #user-input::placeholder{color:var(--faint)}
 .send-btn{
-  background:var(--green);
-  color:#fff;
-  border:none;
-  border-radius:var(--r);
-  padding:.65rem 1.1rem;
-  font-family:inherit;
-  font-size:.82rem;
-  font-weight:700;
-  cursor:pointer;
-  transition:background .15s,transform .1s;
-  white-space:nowrap;
-  flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--sky));color:#fff;
+  border:none;border-radius:var(--r);padding:.65rem 1.1rem;
+  font-family:inherit;font-size:.82rem;font-weight:700;
+  cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap;flex-shrink:0;
 }
-.send-btn:hover{background:var(--green-h)}
+.send-btn:hover{opacity:.9}
 .send-btn:active{transform:scale(.96)}
 .send-btn:disabled{opacity:.4;cursor:not-allowed}
-
-/* action buttons */
 .btn-primary{
-  background:var(--green);color:#fff;
-  border:none;border-radius:var(--r-sm);
-  padding:.55rem 1.1rem;
-  font-family:inherit;font-size:.8rem;font-weight:700;
-  cursor:pointer;transition:background .15s;
+  background:linear-gradient(135deg,var(--blue),var(--sky));color:#fff;
+  border:none;border-radius:var(--r-sm);padding:.55rem 1.1rem;
+  font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:opacity .15s;
 }
-.btn-primary:hover{background:var(--green-h)}
+.btn-primary:hover{opacity:.9}
 .btn-secondary{
-  background:var(--surface-2);color:var(--text);
+  background:var(--surf2);color:var(--text);
   border:1.5px solid var(--border);border-radius:var(--r-sm);
-  padding:.55rem 1rem;
-  font-family:inherit;font-size:.8rem;font-weight:600;
+  padding:.55rem 1rem;font-family:inherit;font-size:.8rem;font-weight:600;
   cursor:pointer;transition:all .15s;
 }
-.btn-secondary:hover{border-color:var(--border-h)}
+.btn-secondary:hover{border-color:var(--blue-m)}
 .btn-row{display:flex;gap:.5rem;margin-top:.5rem}
-
-/* section label */
-.sec-label{
-  font-size:.62rem;font-weight:800;
-  text-transform:uppercase;letter-spacing:.1em;
-  color:var(--muted);
-  margin-bottom:.45rem;
-}
-
-/* textarea inside panels */
+.sec-label{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.45rem}
 .panel-textarea{
-  width:100%;
-  background:var(--bg);
-  border:1.5px solid var(--border);
-  border-radius:var(--r-sm);
-  padding:.55rem .8rem;
-  font-family:inherit;
-  font-size:.82rem;
-  color:var(--text);
-  outline:none;
-  resize:none;
-  transition:border-color .15s;
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:.55rem .8rem;
+  font-family:inherit;font-size:.82rem;color:var(--text);
+  outline:none;resize:none;transition:border-color .15s;
 }
-.panel-textarea:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-l)}
+.panel-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-l)}
 .panel-textarea::placeholder{color:var(--faint)}
+.err-bubble{background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--r);padding:.65rem .9rem;font-size:.82rem;color:#B91C1C}
 
-/* ─── Clippy ─────────────────────────────────────────────────────────── */
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes blink{0%,88%,100%{transform:scaleY(1)}92%{transform:scaleY(.06)}}
-#clippy-wrap{position:fixed;bottom:5.5rem;right:1rem;z-index:50;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem}
-#clippy-bubble{
-  background:var(--gold-l);
-  border:1.5px solid var(--gold);
-  border-radius:var(--r) var(--r) 0 var(--r);
-  padding:.65rem .85rem;
-  max-width:220px;
-  font-size:.72rem;
-  line-height:1.5;
-  color:#6B4F10;
-  box-shadow:var(--shadow);
-  position:relative;
+/* ═══════════════════════════════ STATS PAGE ═══════════════════════════ */
+.page-content{padding:1.5rem 2rem 2rem;flex:1}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.25rem;text-align:center;
+  box-shadow:var(--sh-s);transition:box-shadow .2s,transform .15s;
 }
-.bubble-close{
-  position:absolute;top:.3rem;right:.4rem;
-  background:none;border:none;cursor:pointer;
-  font-size:.75rem;color:var(--gold);
-  line-height:1;padding:0;
+.stat-card:hover{box-shadow:var(--sh);transform:translateY(-2px)}
+.stat-icon{font-size:1.5rem;margin-bottom:.4rem}
+.stat-value{font-size:2rem;font-weight:800;color:var(--blue);letter-spacing:-.04em;line-height:1;margin-bottom:.25rem}
+.stat-label{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh-s)}
+.chart-card h4{font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem}
+
+/* ═══════════════════════════════ GRAPH PAGE ═══════════════════════════ */
+.graph-layout{display:grid;grid-template-columns:1fr 320px;gap:1rem}
+#graph-container{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;position:relative;
+  height:480px;
 }
-.bubble-close:hover{color:var(--text)}
-#clippy-char{
-  width:48px;height:68px;
+#graph-svg{width:100%;height:100%}
+.graph-controls{display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap}
+.graph-panel{display:flex;flex-direction:column;gap:1rem}
+.paper-detail-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:1rem;box-shadow:var(--sh-s);display:none;
+}
+.paper-detail-card.visible{display:block}
+.heatmap-section{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:1rem;box-shadow:var(--sh-s);overflow:auto;
+}
+#heatmap-canvas{display:block}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.72rem;font-weight:600;color:var(--muted);margin-top:.5rem}
+.legend-item{display:flex;align-items:center;gap:.35rem}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.graph-tooltip{
+  position:absolute;background:rgba(15,23,42,.92);color:#fff;
+  padding:.4rem .75rem;border-radius:var(--r-sm);font-size:.72rem;font-weight:600;
+  pointer-events:none;display:none;max-width:240px;line-height:1.4;z-index:10;
+}
+.select-sm{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:.4rem .7rem;font-family:inherit;font-size:.78rem;color:var(--text);outline:none;cursor:pointer;
+}
+
+/* ═══════════════════════════════ EXPLORER PAGE ════════════════════════ */
+.filter-bar{
+  display:flex;gap:.5rem;padding:.85rem 2rem;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.filter-input{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:.5rem .8rem;
+  font-family:inherit;font-size:.82rem;outline:none;transition:border-color .15s;
+}
+.filter-input:focus{border-color:var(--blue)}
+.filter-select{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:.5rem .7rem;font-family:inherit;font-size:.82rem;color:var(--text);outline:none;cursor:pointer;
+}
+#explorer-papers{padding:1.25rem 2rem;display:flex;flex-direction:column;gap:.75rem;overflow-y:auto;flex:1}
+
+/* ═══════════════════════════════ EMPTY STATE ══════════════════════════ */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:4rem 2rem;gap:1rem;color:var(--muted);text-align:center;flex:1;
+}
+.empty-icon{font-size:3rem;opacity:.5}
+.empty-state p{font-size:.87rem;max-width:300px;line-height:1.6}
+
+/* ═══════════════════════════════ HOME PAGE ════════════════════════════ */
+.home-hero{
+  background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;
+  padding:5rem 2rem 4rem;
+  border-bottom:1px solid var(--border);
+}
+.home-badge{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--blue-xl);border:1px solid var(--blue-l);
+  border-radius:999px;padding:.3rem .85rem;
+  font-size:.72rem;font-weight:700;color:var(--blue);
+  margin-bottom:1.5rem;letter-spacing:.01em;
+}
+.home-headline{
+  font-size:3rem;font-weight:800;letter-spacing:-.05em;
+  line-height:1.1;color:var(--text);margin-bottom:.85rem;
+}
+.home-headline span{
+  background:linear-gradient(90deg,var(--blue),var(--sky));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.home-desc{
+  font-size:1rem;color:var(--muted);max-width:520px;line-height:1.65;margin-bottom:2rem;
+}
+.home-ctas{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+.cta-primary{
+  background:linear-gradient(135deg,var(--blue),var(--sky));
+  color:#fff;border:none;border-radius:var(--r);
+  padding:.75rem 1.75rem;font-family:inherit;font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:opacity .15s,transform .1s;
+  display:flex;align-items:center;gap:.4rem;
+}
+.cta-primary:hover{opacity:.9;transform:translateY(-1px)}
+.cta-secondary{
+  background:var(--surface);color:var(--text);
+  border:1.5px solid var(--border);border-radius:var(--r);
+  padding:.75rem 1.5rem;font-family:inherit;font-size:.9rem;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.cta-secondary:hover{border-color:var(--blue-m);color:var(--blue)}
+
+.home-stats{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:3rem 2rem;
+}
+.home-stats-title{text-align:center;margin-bottom:.35rem}
+.home-stats-title h2{font-size:1.3rem;font-weight:800;letter-spacing:-.025em}
+.home-stats-title p{font-size:.82rem;color:var(--muted);margin-top:.3rem}
+.home-stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1rem;margin-top:1.75rem;max-width:900px;margin-left:auto;margin-right:auto;
+}
+.home-stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.25rem 1rem;
+  display:flex;align-items:center;gap:.85rem;
+  box-shadow:var(--sh-s);transition:box-shadow .2s,transform .15s;
+}
+.home-stat-card:hover{box-shadow:var(--sh);transform:translateY(-2px)}
+.home-stat-icon{
+  width:44px;height:44px;border-radius:var(--r-sm);
+  background:var(--blue-xl);display:flex;align-items:center;
+  justify-content:center;font-size:1.2rem;flex-shrink:0;
+}
+.home-stat-value{font-size:1.4rem;font-weight:800;color:var(--text);letter-spacing:-.03em;line-height:1.1}
+.home-stat-label{font-size:.7rem;color:var(--muted);font-weight:500;margin-top:.1rem}
+.home-stat-sub{font-size:.62rem;color:var(--faint);margin-top:.05rem}
+
+.home-features{
+  padding:3.5rem 2rem;background:var(--bg);
+  border-bottom:1px solid var(--border);
+}
+.section-header{text-align:center;margin-bottom:2rem}
+.section-header h2{font-size:1.3rem;font-weight:800;letter-spacing:-.025em}
+.section-header p{font-size:.82rem;color:var(--muted);margin-top:.35rem}
+.features-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1rem;max-width:1000px;margin:0 auto;
+}
+.feature-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:1.5rem 1.25rem;
+  text-align:center;box-shadow:var(--sh-s);
+  transition:box-shadow .2s,transform .15s,border-color .2s;
   cursor:pointer;
-  animation:float 3s ease-in-out infinite;
 }
-.c-eyes{animation:blink 4.5s ease-in-out infinite;transform-origin:center 47px}
+.feature-card:hover{box-shadow:var(--sh);transform:translateY(-3px);border-color:var(--blue-l)}
+.feat-icon{
+  width:52px;height:52px;border-radius:var(--r);
+  background:var(--blue-xl);display:flex;align-items:center;
+  justify-content:center;font-size:1.4rem;margin:0 auto .85rem;
+}
+.feat-name{font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:.4rem}
+.feat-desc{font-size:.75rem;color:var(--muted);line-height:1.55}
 
-/* error */
-.err-bubble{
-  background:#FEF2F2;
-  border:1px solid #FECACA;
-  border-radius:var(--r);
-  padding:.65rem .9rem;
-  font-size:.82rem;
-  color:#B91C1C;
+.home-about{
+  padding:3rem 2rem;background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.about-card{
+  max-width:780px;margin:0 auto;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:2rem;box-shadow:var(--sh-s);
+}
+.about-card h3{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:1rem}
+.about-card p{font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:.75rem}
+.about-card p:last-child{margin-bottom:0}
+
+/* ═══════════════════════════════ ABOUT PAGE ═══════════════════════════ */
+.about-hero{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--sky) 100%);
+  padding:2rem 2rem 1.75rem;color:#fff;text-align:center;flex-shrink:0;
+}
+.about-hero h2{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.35rem}
+.about-hero p{font-size:.85rem;opacity:.85}
+
+.about-content{padding:2rem;max-width:900px;margin:0 auto}
+.objectives-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:1rem 0}
+.obj-card{
+  background:var(--surf2);border:1px solid var(--border);
+  border-radius:var(--r);padding:.85rem 1rem;
+  display:flex;align-items:flex-start;gap:.65rem;
+}
+.obj-icon{font-size:1rem;flex-shrink:0;margin-top:.05rem}
+.obj-title{font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:.15rem}
+.obj-desc{font-size:.72rem;color:var(--muted)}
+
+.methodology-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:1.5rem;
+  box-shadow:var(--sh-s);margin-bottom:1.5rem;
+}
+.methodology-card h3{font-size:.95rem;font-weight:800;margin-bottom:.75rem}
+.method-steps{display:flex;flex-direction:column;gap:.6rem}
+.method-step{
+  display:flex;align-items:flex-start;gap:.75rem;
+  padding:.6rem .75rem;background:var(--surf2);
+  border-radius:var(--r-sm);
+}
+.step-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--blue);color:#fff;
+  font-size:.65rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.method-step p{font-size:.78rem;color:var(--muted);line-height:1.5}
+
+/* TEAM */
+.team-section{margin-bottom:1.5rem}
+.team-section h3{font-size:.95rem;font-weight:800;margin-bottom:1rem;color:var(--text)}
+.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.team-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:1.25rem;
+  text-align:center;box-shadow:var(--sh-s);
+  transition:box-shadow .2s,transform .15s;
+}
+.team-card:hover{box-shadow:var(--sh);transform:translateY(-2px)}
+.team-avatar{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--surf2);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1rem;font-size:1.75rem;color:var(--faint);
+}
+.team-name{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.2rem}
+.team-role{
+  font-size:.68rem;font-weight:600;
+  color:var(--blue);background:var(--blue-xl);
+  border-radius:999px;padding:.15rem .65rem;
+  display:inline-block;margin-bottom:.5rem;
+}
+.team-desc{font-size:.72rem;color:var(--muted);line-height:1.55}
+.team-links{display:flex;justify-content:center;gap:.5rem;margin-top:.75rem}
+.team-link{
+  width:28px;height:28px;border-radius:var(--r-sm);
+  background:var(--surf2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:.75rem;cursor:pointer;
+  transition:all .15s;text-decoration:none;
+}
+.team-link:hover{background:var(--blue-l);color:var(--blue);border-color:var(--blue-l)}
+
+.branding-card{
+  background:var(--text);border-radius:var(--r-lg);
+  padding:1.75rem;text-align:center;margin-top:1.5rem;
+  box-shadow:var(--sh);
+}
+.branding-name{font-size:1.6rem;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:.3rem}
+.branding-name span{color:var(--sky)}
+.branding-tagline{font-size:.78rem;color:rgba(255,255,255,.55);margin-bottom:1rem}
+.branding-badges{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap}
+.brand-badge{
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);
+  border:1px solid rgba(255,255,255,.15);border-radius:var(--r-sm);
+  padding:.35rem .85rem;font-size:.72rem;font-weight:600;
 }
 </style>
 </head>
-
 <body>
 
-<!-- ══════════════════════════════════════════ HEADER ══════════════════ -->
-<header>
-  <div class="header-top">
-    <div class="logo-mark">R</div>
-    <div class="brand-text">
-      <h1>ResearchAgent</h1>
-      <p>Asistente Inteligente para Artículos de Investigación</p>
+<!-- ══════════════════════════════ TOP NAV ══════════════════════════════ -->
+<nav id="top-nav">
+  <div class="nav-brand">
+    <div class="nav-logo">SA</div>
+    <div>
+      <div class="nav-brand-name">Science Agent</div>
+      <div class="nav-brand-sub">Investigación bibliográfica con IA</div>
     </div>
+  </div>
+
+  <div class="nav-links">
+    <button class="nav-link active" data-page="home" onclick="showPage('home')">🏠 Inicio</button>
+    <button class="nav-link" data-page="chat" onclick="showPage('chat')">💬 Chat</button>
+    <button class="nav-link" data-page="graph" onclick="showPage('graph')">🕸 Grafo</button>
+    <button class="nav-link" data-page="stats" onclick="showPage('stats')">📊 Estadísticas</button>
+    <button class="nav-link" data-page="explorer" onclick="showPage('explorer')">🗂 Explorador</button>
+    <button class="nav-link" data-page="about" onclick="showPage('about')">👥 Acerca</button>
+  </div>
+
+  <div class="nav-actions">
     <div class="conn-pill">
       <div class="conn-dot" id="conn-dot"></div>
       <span id="conn-lbl">Conectando</span>
     </div>
   </div>
+</nav>
 
-  <!-- Steps -->
-  <div class="stepper">
-    <div class="step active" id="step-ask_needs">
-      <div class="step-dot">1</div>
-      <span class="step-lbl">Tema</span>
-    </div>
-    <div class="step-line" id="ln-0"></div>
-    <div class="step" id="step-adjust_equation">
-      <div class="step-dot">2</div>
-      <span class="step-lbl">Ecuación</span>
-    </div>
-    <div class="step-line" id="ln-1"></div>
-    <div class="step" id="step-fetch_papers">
-      <div class="step-dot">3</div>
-      <span class="step-lbl">Papers</span>
-    </div>
-    <div class="step-line" id="ln-2"></div>
-    <div class="step" id="step-ask_matrix">
-      <div class="step-dot">4</div>
-      <span class="step-lbl">Formato</span>
-    </div>
-    <div class="step-line" id="ln-3"></div>
-    <div class="step" id="step-generate_matrix">
-      <div class="step-dot">5</div>
-      <span class="step-lbl">Matriz</span>
-    </div>
-    <div class="step-line" id="ln-4"></div>
-    <div class="step" id="step-qa">
-      <div class="step-dot">6</div>
-      <span class="step-lbl">Q&amp;A</span>
-    </div>
-  </div>
-</header>
+<!-- ══════════════════════════════ APP ══════════════════════════════════ -->
+<div id="app">
 
-<!-- ══════════════════════════════════════════ CHAT ════════════════════ -->
-<div id="chat"></div>
+  <!-- ════════════════ HOME PAGE ════════════════ -->
+  <div id="page-home" class="page active">
 
-<!-- ══════════════════════════════════════════ INPUT PANEL ════════════ -->
-<div id="input-panel">
-
-  <!-- Equation editor -->
-  <div id="eq-block" style="display:none;margin-bottom:.75rem">
-    <p class="sec-label">Ecuación de búsqueda generada</p>
-    <div class="eq-code" id="eq-display"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
-      <button class="eq-explain-toggle" onclick="toggleExplain()">
-        <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" stroke="currentColor" fill="none"/><text x="5" y="7.5" text-anchor="middle" font-size="7" fill="currentColor">?</text></svg>
-        ¿Por qué esta ecuación?
-      </button>
+    <!-- Hero -->
+    <div class="home-hero">
+      <div class="home-badge">⚗ Investigación Científica con IA · DataHack 2026</div>
+      <h1 class="home-headline">Descubre la frontera<br>del <span>conocimiento científico</span></h1>
+      <p class="home-desc">Science Agent es tu asistente de investigación académica. Construye ecuaciones de búsqueda booleanas, captura artículos de ArXiv y Google Scholar, genera matrices bibliográficas y visualiza conexiones entre papers.</p>
+      <div class="home-ctas">
+        <button class="cta-primary" onclick="showPage('chat')">Explorar Chat →</button>
+        <button class="cta-secondary" onclick="showPage('about')">Conocer más</button>
+      </div>
     </div>
-    <div id="eq-explain" style="display:none">
-      <div class="eq-explain-text" id="eq-explain-text"></div>
-    </div>
-    <div style="margin:.6rem 0">
-      <p class="sec-label" style="margin-bottom:.3rem">Editar ecuación (opcional)</p>
-      <textarea class="panel-textarea" id="eq-editor" rows="2"
-        placeholder="Deja vacío para confirmar tal como está…"></textarea>
-    </div>
-    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem">
-      <span style="font-size:.72rem;font-weight:600;color:var(--muted);white-space:nowrap">Papers por fuente</span>
-      <input type="range" id="count-slider" min="1" max="20" value="5"
-        oninput="document.getElementById('count-val').textContent=this.value"/>
-      <span style="font-size:.88rem;font-weight:800;color:var(--green);min-width:24px;text-align:center" id="count-val">5</span>
-    </div>
-    <div class="btn-row">
-      <button class="btn-primary" style="flex:1" onclick="confirmEquation()">✓ Confirmar ecuación</button>
-      <button class="btn-secondary" style="flex:1" onclick="sendEquation()">Usar mi versión</button>
-    </div>
-  </div>
 
-  <!-- Template selector -->
-  <div id="tpl-block" style="display:none;margin-bottom:.75rem">
-    <p class="sec-label">Plantilla de matriz bibliográfica</p>
-    <div class="tpl-grid" id="tpl-grid"></div>
-    <div style="margin-top:.35rem">
-      <p class="sec-label" style="margin-bottom:.3rem">Personalización (opcional)</p>
-      <textarea class="panel-textarea" id="custom-fmt" rows="2"
-        placeholder="Añade o modifica columnas de la plantilla…"></textarea>
+    <!-- Stats en cifras -->
+    <div class="home-stats">
+      <div class="home-stats-title">
+        <h2>Science Agent en Acción</h2>
+        <p>Capacidades del sistema de investigación bibliográfica</p>
+      </div>
+      <div class="home-stats-grid">
+        <div class="home-stat-card">
+          <div class="home-stat-icon">📄</div>
+          <div>
+            <div class="home-stat-value">25</div>
+            <div class="home-stat-label">Papers por fuente</div>
+            <div class="home-stat-sub">ArXiv + Google Scholar</div>
+          </div>
+        </div>
+        <div class="home-stat-card">
+          <div class="home-stat-icon">🔬</div>
+          <div>
+            <div class="home-stat-value">6</div>
+            <div class="home-stat-label">Plantillas de matriz</div>
+            <div class="home-stat-sub">Estado del arte, Meta-análisis…</div>
+          </div>
+        </div>
+        <div class="home-stat-card">
+          <div class="home-stat-icon">🤖</div>
+          <div>
+            <div class="home-stat-value">7</div>
+            <div class="home-stat-label">Nodos del agente</div>
+            <div class="home-stat-sub">Flujo LangGraph completo</div>
+          </div>
+        </div>
+        <div class="home-stat-card">
+          <div class="home-stat-icon">💻</div>
+          <div>
+            <div class="home-stat-value">100%</div>
+            <div class="home-stat-label">Local con Ollama</div>
+            <div class="home-stat-sub">Sin API keys externas</div>
+          </div>
+        </div>
+      </div>
     </div>
-    <button class="btn-primary" style="width:100%;margin-top:.5rem" onclick="useTemplate()">
-      Generar matriz →
-    </button>
-  </div>
 
-  <!-- Normal text input -->
-  <div class="text-input-row" id="normal-input">
-    <textarea id="user-input" rows="1"
-      placeholder="Escribe aquí…"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
-      oninput="autoResize(this)"></textarea>
-    <button class="send-btn" id="send-btn" onclick="sendMessage()">Enviar →</button>
-  </div>
+    <!-- Funcionalidades -->
+    <div class="home-features">
+      <div class="section-header">
+        <h2>Funcionalidades</h2>
+        <p>Herramientas diseñadas para investigadores, estudiantes y académicos</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" onclick="showPage('chat')">
+          <div class="feat-icon">💬</div>
+          <div class="feat-name">Chat Inteligente</div>
+          <div class="feat-desc">Conversación guiada para construir la ecuación de búsqueda y responder preguntas sobre los artículos encontrados</div>
+        </div>
+        <div class="feature-card" onclick="showPage('graph')">
+          <div class="feat-icon">🕸</div>
+          <div class="feat-name">Grafo de Conocimiento</div>
+          <div class="feat-desc">Red de conexiones entre artículos por palabras clave compartidas con mapa de calor de similitud Jaccard</div>
+        </div>
+        <div class="feature-card" onclick="showPage('stats')">
+          <div class="feat-icon">📊</div>
+          <div class="feat-name">Estadísticas</div>
+          <div class="feat-desc">Análisis cuantitativo del corpus: distribución por fuente, año, keywords y citas con gráficas interactivas</div>
+        </div>
+        <div class="feature-card" onclick="showPage('explorer')">
+          <div class="feat-icon">🗂</div>
+          <div class="feat-name">Explorador</div>
+          <div class="feat-desc">Navega, filtra y ordena todos los artículos con abstract completo, DOI y enlace directo al PDF</div>
+        </div>
+      </div>
+    </div>
 
-</div><!-- /input-panel -->
+    <!-- Acerca del Proyecto -->
+    <div class="home-about">
+      <div class="about-card">
+        <h3>Acerca del Proyecto</h3>
+        <p><strong>Science Agent</strong> es una herramienta de investigación académica desarrollada para el <strong>DataHack 2026 · Reto 3</strong>. Combina un agente LangGraph con modelos de lenguaje Ollama para automatizar la búsqueda y síntesis de literatura científica.</p>
+        <p>El sistema busca simultáneamente en <strong>ArXiv</strong> y <strong>Google Scholar</strong>, construye ecuaciones booleanas elaboradas con sinónimos y operadores de campo, y genera matrices bibliográficas con análisis de tendencias, brechas y recomendaciones de lectura.</p>
+        <p>Todo funciona completamente en local — sin API keys externas — usando modelos como <strong>llama3.1:8b</strong> a través de Ollama.</p>
+      </div>
+    </div>
 
-<!-- ══════════════════════════════════════════ CLIPPY ══════════════════ -->
-<div id="clippy-wrap">
-  <div id="clippy-bubble">
-    <button class="bubble-close" onclick="hideBubble()">×</button>
-    <span id="clippy-msg">¡Hola! Cuéntame sobre tu investigación y construiremos juntos la búsqueda perfecta.</span>
-  </div>
-  <svg id="clippy-char" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 72"
-       onclick="toggleBubble()" title="Clippy">
-    <!-- outer loop -->
-    <path d="M8,65 C8,73 40,73 40,65 L40,20 C40,5 8,5 8,20 Z"
-          fill="none" stroke="#2B5E2A" stroke-width="6.5"
-          stroke-linejoin="round" stroke-linecap="round"/>
-    <!-- inner loop -->
-    <path d="M19,59 L19,27 C19,15 30,15 30,27 L30,56"
-          fill="none" stroke="#2B5E2A" stroke-width="6.5" stroke-linecap="round"/>
-    <!-- face bg -->
-    <circle cx="24" cy="44" r="11" fill="#2B5E2A"/>
-    <!-- eyes -->
-    <g class="c-eyes">
-      <circle cx="20" cy="41" r="2.6" fill="white"/>
-      <circle cx="28" cy="41" r="2.6" fill="white"/>
-      <circle cx="21" cy="42" r="1.3" fill="#1A1714"/>
-      <circle cx="29" cy="42" r="1.3" fill="#1A1714"/>
-    </g>
-    <!-- smile -->
-    <path d="M19,49 Q24,54 29,49" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-  </svg>
-</div>
+  </div><!-- /page-home -->
 
-<!-- ══════════════════════════════════════════ JS ══════════════════════ -->
+  <!-- ════════════════ CHAT PAGE ════════════════ -->
+  <div id="page-chat" class="page">
+
+    <!-- Stepper -->
+    <div class="stepper-bar">
+      <div class="step active" id="step-ask_needs">
+        <div class="step-dot">1</div><span class="step-lbl">Tema</span>
+      </div>
+      <div class="step-line" id="ln-0"></div>
+      <div class="step" id="step-adjust_equation">
+        <div class="step-dot">2</div><span class="step-lbl">Ecuación</span>
+      </div>
+      <div class="step-line" id="ln-1"></div>
+      <div class="step" id="step-fetch_papers">
+        <div class="step-dot">3</div><span class="step-lbl">Papers</span>
+      </div>
+      <div class="step-line" id="ln-2"></div>
+      <div class="step" id="step-ask_matrix">
+        <div class="step-dot">4</div><span class="step-lbl">Formato</span>
+      </div>
+      <div class="step-line" id="ln-3"></div>
+      <div class="step" id="step-generate_matrix">
+        <div class="step-dot">5</div><span class="step-lbl">Matriz</span>
+      </div>
+      <div class="step-line" id="ln-4"></div>
+      <div class="step" id="step-qa">
+        <div class="step-dot">6</div><span class="step-lbl">Q&amp;A</span>
+      </div>
+    </div>
+
+    <!-- Chat messages -->
+    <div id="chat"></div>
+
+    <!-- Input panel -->
+    <div id="input-panel">
+
+      <!-- Equation editor -->
+      <div id="eq-block" style="display:none;margin-bottom:.75rem">
+        <p class="sec-label">Ecuación de búsqueda generada</p>
+        <div class="eq-code" id="eq-display"></div>
+        <div style="display:flex;align-items:center;margin-bottom:.35rem">
+          <button class="eq-explain-toggle" onclick="toggleExplain()">
+            <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" stroke="currentColor" fill="none"/><text x="5" y="7.5" text-anchor="middle" font-size="7" fill="currentColor">?</text></svg>
+            ¿Por qué esta ecuación?
+          </button>
+        </div>
+        <div id="eq-explain" style="display:none">
+          <div class="eq-explain-text" id="eq-explain-text"></div>
+        </div>
+        <div style="margin:.6rem 0">
+          <p class="sec-label" style="margin-bottom:.3rem">Editar ecuación (opcional)</p>
+          <textarea class="panel-textarea" id="eq-editor" rows="2" placeholder="Deja vacío para confirmar tal como está…"></textarea>
+        </div>
+        <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem">
+          <span style="font-size:.72rem;font-weight:600;color:var(--muted);white-space:nowrap">Papers por fuente</span>
+          <input type="range" id="count-slider" min="1" max="25" value="10"
+            oninput="document.getElementById('count-val').textContent=this.value"/>
+          <span style="font-size:.88rem;font-weight:800;color:var(--blue);min-width:26px;text-align:center" id="count-val">10</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" style="flex:1" onclick="confirmEquation()">✓ Confirmar ecuación</button>
+          <button class="btn-secondary" style="flex:1" onclick="sendEquation()">Usar mi versión</button>
+        </div>
+      </div>
+
+      <!-- Template selector -->
+      <div id="tpl-block" style="display:none;margin-bottom:.75rem">
+        <p class="sec-label">Plantilla de matriz bibliográfica</p>
+        <div class="tpl-grid" id="tpl-grid"></div>
+        <div style="margin-top:.35rem">
+          <p class="sec-label" style="margin-bottom:.3rem">Personalización (opcional)</p>
+          <textarea class="panel-textarea" id="custom-fmt" rows="2" placeholder="Añade o modifica columnas de la plantilla…"></textarea>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-top:.5rem" onclick="useTemplate()">Generar matriz →</button>
+      </div>
+
+      <!-- Normal input -->
+      <div class="text-input-row" id="normal-input">
+        <textarea id="user-input" rows="1"
+          placeholder="Escribe aquí…"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">Enviar →</button>
+      </div>
+
+    </div><!-- /input-panel -->
+  </div><!-- /page-chat -->
+
+  <!-- ════════════════ GRAPH PAGE ════════════════ -->
+  <div id="page-graph" class="page">
+    <div class="page-hero">
+      <h2>🕸 Grafo de Conocimiento</h2>
+      <p>Red de conexiones entre artículos basada en palabras clave compartidas · Haz clic en un nodo para ver detalles</p>
+    </div>
+
+    <div class="page-content">
+      <div id="graph-empty" class="empty-state">
+        <div class="empty-icon">🔭</div>
+        <p>Aún no hay artículos cargados. Ve al Chat e inicia una búsqueda de investigación.</p>
+      </div>
+
+      <div id="graph-loaded" style="display:none">
+        <div class="graph-controls">
+          <select class="select-sm" id="graph-color-by" onchange="buildForceGraph()">
+            <option value="source">Colorear por fuente</option>
+            <option value="year">Colorear por año</option>
+          </select>
+          <button class="btn-secondary" onclick="resetGraphZoom()" style="font-size:.75rem;padding:.35rem .75rem">↺ Reset zoom</button>
+        </div>
+
+        <div class="graph-layout">
+          <div>
+            <div id="graph-container">
+              <svg id="graph-svg"></svg>
+              <div class="graph-tooltip" id="graph-tooltip"></div>
+            </div>
+            <div class="legend" id="graph-legend" style="margin-top:.5rem"></div>
+          </div>
+
+          <div class="graph-panel">
+            <div class="paper-detail-card" id="paper-detail">
+              <p class="sec-label" style="margin-bottom:.5rem">Artículo seleccionado</p>
+              <div id="paper-detail-content"></div>
+            </div>
+            <div class="heatmap-section">
+              <p class="sec-label" style="margin-bottom:.3rem">Mapa de calor · Similitud</p>
+              <p style="font-size:.7rem;color:var(--muted);margin-bottom:.65rem">Jaccard por palabras clave compartidas</p>
+              <canvas id="heatmap-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-graph -->
+
+  <!-- ════════════════ STATS PAGE ════════════════ -->
+  <div id="page-stats" class="page">
+    <div class="page-hero">
+      <h2>📊 Estadísticas de Investigación</h2>
+      <p>Análisis cuantitativo del corpus bibliográfico encontrado</p>
+    </div>
+
+    <div class="page-content">
+      <div id="stats-empty" class="empty-state">
+        <div class="empty-icon">📈</div>
+        <p>Aún no hay artículos cargados. Ve al Chat e inicia una búsqueda de investigación.</p>
+      </div>
+
+      <div id="stats-loaded" style="display:none">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📄</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Papers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔭</div>
+            <div class="stat-value" id="stat-arxiv">0</div>
+            <div class="stat-label">ArXiv</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-value" id="stat-scholar">0</div>
+            <div class="stat-label">Google Scholar</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="stat-cites">0</div>
+            <div class="stat-label">Citas totales</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h4>🔵 Distribución por fuente</h4>
+            <canvas id="chart-source" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>📅 Papers por año</h4>
+            <canvas id="chart-year" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>🏷 Palabras clave frecuentes</h4>
+            <canvas id="chart-keywords" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>💎 Distribución de citas</h4>
+            <canvas id="chart-cites-dist" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-stats -->
+
+  <!-- ════════════════ EXPLORER PAGE ════════════════ -->
+  <div id="page-explorer" class="page">
+    <div class="page-hero">
+      <h2>🗂 Explorador de Artículos</h2>
+      <p>Navega, filtra y revisa todos los artículos con detalle completo · Los más relevantes están resaltados</p>
+    </div>
+
+    <div id="explorer-empty" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <p>Aún no hay artículos cargados. Ve al Chat e inicia una búsqueda de investigación.</p>
+    </div>
+
+    <div id="explorer-loaded" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div class="filter-bar">
+        <input class="filter-input" id="exp-search" placeholder="🔍 Buscar por título, autor o palabra clave…" oninput="filterExplorer()"/>
+        <select class="filter-select" id="exp-source" onchange="filterExplorer()">
+          <option value="">Todas las fuentes</option>
+          <option value="ArXiv">ArXiv</option>
+          <option value="Google Scholar">Google Scholar</option>
+        </select>
+        <select class="filter-select" id="exp-sort" onchange="filterExplorer()">
+          <option value="default">Orden original</option>
+          <option value="year-desc">Más recientes primero</option>
+          <option value="year-asc">Más antiguos primero</option>
+          <option value="citations">Mayor citación</option>
+        </select>
+      </div>
+      <div id="explorer-papers"></div>
+    </div>
+  </div><!-- /page-explorer -->
+
+  <!-- ════════════════ ABOUT PAGE ════════════════ -->
+  <div id="page-about" class="page">
+
+    <div class="about-hero">
+      <h2>👥 Acerca de Science Agent</h2>
+      <p>Transformando datos bibliográficos en conocimiento accionable</p>
+    </div>
+
+    <div style="overflow-y:auto;flex:1;padding:2rem">
+      <div class="about-content" style="max-width:900px;margin:0 auto">
+
+        <!-- Descripción -->
+        <div class="methodology-card" style="margin-bottom:1.5rem">
+          <h3>¿Qué es Science Agent?</h3>
+          <p style="font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:.75rem">
+            <strong>Science Agent</strong> es una plataforma de investigación académica impulsada por inteligencia artificial, desarrollada como parte del <strong>DataHack 2026 · Reto 3</strong>. Automatiza el proceso completo de revisión de literatura científica: desde la construcción de ecuaciones de búsqueda hasta la generación de matrices bibliográficas con análisis de tendencias.
+          </p>
+          <p style="font-size:.85rem;color:var(--muted);line-height:1.7">
+            El sistema utiliza un agente <strong>LangGraph</strong> con 7 nodos orquestados, modelos locales <strong>Ollama</strong> (llama3.1:8b), y búsqueda simultánea en <strong>ArXiv</strong> y <strong>Google Scholar</strong>, todo corriendo localmente sin necesidad de API keys externas.
+          </p>
+        </div>
+
+        <!-- Objetivos -->
+        <div class="methodology-card" style="margin-bottom:1.5rem">
+          <h3>Objetivos</h3>
+          <div class="objectives-grid">
+            <div class="obj-card">
+              <div class="obj-icon">🔍</div>
+              <div><div class="obj-title">Búsqueda Automatizada</div><div class="obj-desc">Ecuaciones booleanas con sinónimos y operadores de campo generadas por IA</div></div>
+            </div>
+            <div class="obj-card">
+              <div class="obj-icon">📊</div>
+              <div><div class="obj-title">Síntesis Bibliométrica</div><div class="obj-desc">Matrices con métricas cuantitativas, tendencias y recomendaciones de lectura</div></div>
+            </div>
+            <div class="obj-card">
+              <div class="obj-icon">🕸</div>
+              <div><div class="obj-title">Visualización de Redes</div><div class="obj-desc">Grafos de conocimiento y mapas de calor de similitud entre artículos</div></div>
+            </div>
+            <div class="obj-card">
+              <div class="obj-icon">💻</div>
+              <div><div class="obj-title">100% Local</div><div class="obj-desc">Sin dependencias de API externas, privacidad total de los datos de investigación</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metodología / cómo funciona -->
+        <div class="methodology-card" style="margin-bottom:2rem">
+          <h3>¿Cómo funciona?</h3>
+          <div class="method-steps">
+            <div class="method-step"><div class="step-num">1</div><p><strong>Describe tu tema</strong> — El agente recibe tu área de investigación o pregunta científica con el mayor detalle posible.</p></div>
+            <div class="method-step"><div class="step-num">2</div><p><strong>Ecuación booleana</strong> — El LLM construye una ecuación elaborada con sinónimos, variantes morfológicas y operadores de exclusión.</p></div>
+            <div class="method-step"><div class="step-num">3</div><p><strong>Búsqueda paralela</strong> — Se consultan simultáneamente ArXiv (hasta 25 papers) y Google Scholar (hasta 25 papers).</p></div>
+            <div class="method-step"><div class="step-num">4</div><p><strong>Selección de plantilla</strong> — Elige entre 6 templates especializados: Estado del Arte, Revisión Sistemática, Benchmarking, Marco Teórico, Tendencias o Meta-análisis.</p></div>
+            <div class="method-step"><div class="step-num">5</div><p><strong>Matriz bibliográfica</strong> — El LLM genera una tabla Markdown detallada con análisis de tendencias, brechas y recomendaciones.</p></div>
+            <div class="method-step"><div class="step-num">6</div><p><strong>Q&amp;A sobre papers</strong> — Haz preguntas específicas sobre la literatura encontrada; el agente responde con citas concretas.</p></div>
+            <div class="method-step"><div class="step-num">7</div><p><strong>Exportar a XLSX</strong> — Descarga la matriz en Excel con colores claros: artículos, matriz bibliográfica y metadatos de búsqueda.</p></div>
+          </div>
+        </div>
+
+        <!-- Team -->
+        <div class="team-section">
+          <h3>Nuestro Equipo</h3>
+          <div class="team-grid">
+            <div class="team-card">
+              <div class="team-avatar">👤</div>
+              <div class="team-name">Por definir</div>
+              <div class="team-role">Rol</div>
+              <div class="team-desc">Descripción del miembro próximamente.</div>
+              <div class="team-links">
+                <a class="team-link" href="#" title="LinkedIn">in</a>
+                <a class="team-link" href="#" title="GitHub">⌥</a>
+              </div>
+            </div>
+            <div class="team-card">
+              <div class="team-avatar">👤</div>
+              <div class="team-name">Por definir</div>
+              <div class="team-role">Rol</div>
+              <div class="team-desc">Descripción del miembro próximamente.</div>
+              <div class="team-links">
+                <a class="team-link" href="#" title="LinkedIn">in</a>
+                <a class="team-link" href="#" title="GitHub">⌥</a>
+              </div>
+            </div>
+            <div class="team-card">
+              <div class="team-avatar">👤</div>
+              <div class="team-name">Por definir</div>
+              <div class="team-role">Rol</div>
+              <div class="team-desc">Descripción del miembro próximamente.</div>
+              <div class="team-links">
+                <a class="team-link" href="#" title="LinkedIn">in</a>
+                <a class="team-link" href="#" title="GitHub">⌥</a>
+              </div>
+            </div>
+            <div class="team-card">
+              <div class="team-avatar">👤</div>
+              <div class="team-name">Por definir</div>
+              <div class="team-role">Rol</div>
+              <div class="team-desc">Descripción del miembro próximamente.</div>
+              <div class="team-links">
+                <a class="team-link" href="#" title="LinkedIn">in</a>
+                <a class="team-link" href="#" title="GitHub">⌥</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branding UNnammed -->
+        <div class="branding-card">
+          <div class="branding-name">UN<span>named</span>.</div>
+          <div class="branding-tagline">Equipo multidisciplinar · DataHack 2026 · Reto 3</div>
+          <div class="branding-badges">
+            <span class="brand-badge">🏆 DataHack 2026</span>
+            <span class="brand-badge">🤖 LangGraph + Ollama</span>
+            <span class="brand-badge">⚗ Science Agent</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /page-about -->
+
+</div><!-- /app -->
+
+<!-- ══════════════════════════════ SCRIPTS ══════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 marked.setOptions({breaks:true,gfm:true});
 
-// ── Globals ────────────────────────────────────────────────────────────
-let ws=null,sessionId=null,selectedTpl="",locked=false,explainOpen=false,bubbleVis=true;
+/* ─── Globals ─────────────────────────────────────────────────────────── */
+let ws=null,sessionId=null,selectedTpl="",locked=false,explainOpen=false;
+let globalPapers=[],globalMatrix="";
+let chartInst={};
+let d3Zoom=null,d3Sim=null;
 
 const STEPS=["ask_needs","adjust_equation","fetch_papers","ask_matrix","generate_matrix","qa"];
-const TIPS={
-  ask_needs:"Describe el tema con detalle: disciplina, técnica, aplicación. Más contexto = ecuación más precisa.",
-  adjust_equation:"Usa AND para unir conceptos, OR para sinónimos y NOT para excluir ruido. Las comillas buscan frases exactas.",
-  fetch_papers:"Buscando en ArXiv y Google Scholar. Los papers de ArXiv siempre incluyen PDF.",
-  ask_matrix:"Elige una plantilla con datos bibliométricos (citas, DOI, revista). Puedes personalizar las columnas.",
-  generate_matrix:"Generando tu matriz… al final incluirá un análisis de tendencias.",
-  qa:"Puedo comparar metodologías, resumir hallazgos, identificar brechas o sugerir qué leer primero.",
-};
 
-// ── Bootstrap ──────────────────────────────────────────────────────────
+/* ─── Page navigation ─────────────────────────────────────────────────── */
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  const pageEl=document.getElementById('page-'+name);
+  if(pageEl) pageEl.classList.add('active');
+  const navEl=document.querySelector(`.nav-link[data-page="${name}"]`);
+  if(navEl) navEl.classList.add('active');
+  if(name==='graph')    renderGraph();
+  if(name==='stats')    renderStats();
+  if(name==='explorer') renderExplorer();
+}
+
+/* ─── Init ────────────────────────────────────────────────────────────── */
 async function init(){
-  const r=await fetch("/api/session");
+  const r=await fetch('/api/session');
   sessionId=(await r.json()).session_id;
   connectWS();
 }
 
 function connectWS(){
-  const proto=location.protocol==="https:"?"wss":"ws";
+  const proto=location.protocol==='https:'?'wss':'ws';
   ws=new WebSocket(`${proto}://${location.host}/ws/${sessionId}`);
-  ws.onopen=()=>setConn("var(--green)","Conectado");
-  ws.onclose=()=>{setConn("#EF4444","Desconectado");setTimeout(connectWS,3000)};
-  ws.onerror=()=>setConn("#EF4444","Error");
+  ws.onopen=()=>setConn('var(--green)','Conectado');
+  ws.onclose=()=>{setConn('var(--red)','Desconectado');setTimeout(connectWS,3000)};
+  ws.onerror=()=>setConn('var(--red)','Error');
   ws.onmessage=ev=>handle(JSON.parse(ev.data));
 }
 
-function setConn(color,label){
-  document.getElementById("conn-dot").style.background=color;
-  document.getElementById("conn-lbl").textContent=label;
+function setConn(col,lbl){
+  document.getElementById('conn-dot').style.background=col;
+  document.getElementById('conn-lbl').textContent=lbl;
 }
 
-// ── Message router ─────────────────────────────────────────────────────
+/* ─── Message handler ─────────────────────────────────────────────────── */
 function handle(msg){
   removeTyping();
   switch(msg.type){
-    case "status":
+    case 'status':
       addTyping(msg.content); break;
-
-    case "question":
-      setStage("ask_needs");
+    case 'question':
+      setStage('ask_needs'); addBot(msg.content);
+      showNormal('¿Cuál es tu tema de investigación?'); break;
+    case 'equation':
+      setStage('adjust_equation'); addBot(msg.content);
+      openEquationEditor(msg.equation,msg.explanation||''); break;
+    case 'papers':
+      setStage('fetch_papers');
+      globalPapers=msg.papers||[];
+      addPapers(globalPapers);
       addBot(msg.content);
-      showNormal("¿Cuál es tu tema de investigación?");
-      break;
-
-    case "equation":
-      setStage("adjust_equation");
-      addBot(msg.content);
-      openEquationEditor(msg.equation,msg.explanation||"");
-      break;
-
-    case "papers":
-      setStage("fetch_papers");
-      addPapers(msg.papers||[]);
-      addBot(msg.content);
-      setStage("ask_matrix");
-      openTemplateSelector(msg.templates||[]);
-      break;
-
-    case "qa":
-      setStage("qa");
+      setStage('ask_matrix');
+      openTemplateSelector(msg.templates||[]); break;
+    case 'qa':
+      setStage('qa');
       if(msg.last_answer) addBot(msg.last_answer);
-      if(msg.show_matrix&&msg.matrix) addMatrix(msg.matrix);
-      showNormal("Haz una pregunta sobre los artículos…");
-      break;
-
-    case "error":
-      addError(msg.content);
-      showNormal();
-      break;
-
-    case "complete":
-      addBot("Sesión completada. Recarga la página para comenzar de nuevo.");
-      lock();
-      break;
+      if(msg.show_matrix&&msg.matrix){globalMatrix=msg.matrix;addMatrix(msg.matrix);}
+      showNormal('Haz una pregunta sobre los artículos…'); break;
+    case 'error':
+      addError(msg.content); showNormal(); break;
+    case 'complete':
+      addBot('Sesión completada. Recarga la página para comenzar de nuevo.'); lock(); break;
   }
 }
 
-// ── Send ───────────────────────────────────────────────────────────────
+/* ─── Send ────────────────────────────────────────────────────────────── */
 function sendMessage(){
   if(locked)return;
-  const el=document.getElementById("user-input");
-  const txt=el.value.trim();
-  if(!txt)return;
-  addUser(txt);
-  wsSend({type:"response",content:txt});
-  el.value="";
-  autoResize(el);
-  lock();
+  const el=document.getElementById('user-input');
+  const txt=el.value.trim(); if(!txt)return;
+  addUser(txt); wsSend({type:'response',content:txt});
+  el.value=''; autoResize(el); lock();
 }
-
 function confirmEquation(){
-  const count=parseInt(document.getElementById("count-slider").value)||5;
+  const count=parseInt(document.getElementById('count-slider').value)||10;
   addUser(`Ecuación confirmada · ${count} papers por fuente`);
-  closeEquationEditor();
-  wsSend({type:"response",content:"confirmar",count});
-  lock();
+  closeEquationEditor(); wsSend({type:'response',content:'confirmar',count}); lock();
 }
-
 function sendEquation(){
-  const eq=document.getElementById("eq-editor").value.trim();
-  const count=parseInt(document.getElementById("count-slider").value)||5;
+  const eq=document.getElementById('eq-editor').value.trim();
+  const count=parseInt(document.getElementById('count-slider').value)||10;
   if(!eq){confirmEquation();return;}
   addUser(`Ecuación personalizada · ${count} papers por fuente`);
-  closeEquationEditor();
-  wsSend({type:"response",content:eq,count});
-  lock();
+  closeEquationEditor(); wsSend({type:'response',content:eq,count}); lock();
 }
-
 function useTemplate(){
-  const custom=document.getElementById("custom-fmt").value.trim();
-  const name=document.querySelector(".tpl-card.selected .tpl-name")?.textContent||"Plantilla personalizada";
-  addUser(`Plantilla: ${name}${custom?" + personalización":""}`);
-  closeTemplateSelector();
-  wsSend({type:"response",content:custom,template_id:selectedTpl});
-  lock();
+  const custom=document.getElementById('custom-fmt').value.trim();
+  const name=document.querySelector('.tpl-card.selected .tpl-name')?.textContent||'Plantilla personalizada';
+  addUser(`Plantilla: ${name}${custom?' + personalización':''}`);
+  closeTemplateSelector(); wsSend({type:'response',content:custom,template_id:selectedTpl}); lock();
 }
+function wsSend(obj){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj))}
 
-function wsSend(obj){
-  if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj));
-}
-
-// ── Panel visibility ───────────────────────────────────────────────────
-function showNormal(ph){
-  hide("eq-block");hide("tpl-block");show("normal-input");
-  unlock(ph);
-}
+/* ─── Panels ──────────────────────────────────────────────────────────── */
+function showNormal(ph){hide('eq-block');hide('tpl-block');show('normal-input');unlock(ph)}
 function openEquationEditor(eq,exp){
-  document.getElementById("eq-display").textContent=eq||"";
-  document.getElementById("eq-editor").value="";
-  document.getElementById("eq-editor").placeholder=eq||"";
-  document.getElementById("eq-explain-text").textContent=exp||"";
-  document.getElementById("eq-explain").style.display="none";
+  document.getElementById('eq-display').textContent=eq||'';
+  document.getElementById('eq-editor').value='';
+  document.getElementById('eq-editor').placeholder=eq||'';
+  document.getElementById('eq-explain-text').textContent=exp||'';
+  document.getElementById('eq-explain').style.display='none';
   explainOpen=false;
-  show("eq-block");hide("normal-input");hide("tpl-block");
+  show('eq-block');hide('normal-input');hide('tpl-block');
 }
-function closeEquationEditor(){hide("eq-block");show("normal-input")}
+function closeEquationEditor(){hide('eq-block');show('normal-input')}
 function openTemplateSelector(templates){
-  const grid=document.getElementById("tpl-grid");
-  grid.innerHTML="";
-  selectedTpl="";
+  const grid=document.getElementById('tpl-grid');
+  grid.innerHTML=''; selectedTpl='';
   templates.forEach(t=>{
-    const d=document.createElement("div");
-    d.className="tpl-card";
-    d.dataset.id=t.id;
+    const d=document.createElement('div');
+    d.className='tpl-card'; d.dataset.id=t.id;
     d.innerHTML=`<div class="tpl-icon">${t.icon}</div><div class="tpl-name">${esc(t.name)}</div><div class="tpl-desc">${esc(t.description)}</div>`;
-    d.onclick=()=>{
-      document.querySelectorAll(".tpl-card").forEach(c=>c.classList.remove("selected"));
-      d.classList.add("selected");
-      selectedTpl=t.id;
-    };
+    d.onclick=()=>{document.querySelectorAll('.tpl-card').forEach(c=>c.classList.remove('selected'));d.classList.add('selected');selectedTpl=t.id};
     grid.appendChild(d);
   });
-  document.getElementById("custom-fmt").value="";
-  show("tpl-block");hide("normal-input");hide("eq-block");
+  document.getElementById('custom-fmt').value='';
+  show('tpl-block');hide('normal-input');hide('eq-block');
 }
-function closeTemplateSelector(){hide("tpl-block");show("normal-input")}
+function closeTemplateSelector(){hide('tpl-block');show('normal-input')}
 function toggleExplain(){
   explainOpen=!explainOpen;
-  document.getElementById("eq-explain").style.display=explainOpen?"block":"none";
+  document.getElementById('eq-explain').style.display=explainOpen?'block':'none';
 }
 
-// ── Lock / unlock ──────────────────────────────────────────────────────
-function lock(){
-  locked=true;
-  document.getElementById("user-input").disabled=true;
-  document.getElementById("send-btn").disabled=true;
-}
+/* ─── Lock/unlock ─────────────────────────────────────────────────────── */
+function lock(){locked=true;document.getElementById('user-input').disabled=true;document.getElementById('send-btn').disabled=true}
 function unlock(ph){
   locked=false;
-  const el=document.getElementById("user-input");
-  el.disabled=false;
-  document.getElementById("send-btn").disabled=false;
-  if(ph)el.placeholder=ph;
-  el.focus();
+  const el=document.getElementById('user-input');
+  el.disabled=false; document.getElementById('send-btn').disabled=false;
+  if(ph)el.placeholder=ph; el.focus();
 }
 
-// ── Render helpers ─────────────────────────────────────────────────────
-function chatEl(){return document.getElementById("chat")}
+/* ─── Render helpers ──────────────────────────────────────────────────── */
+function chatEl(){return document.getElementById('chat')}
 function scroll(){const c=chatEl();c.scrollTop=c.scrollHeight}
 
 function addBot(text){
   if(!text)return;
-  const w=document.createElement("div");
-  w.className="msg-bot";
-  w.innerHTML=`<div class="bot-avatar">RA</div><div class="bubble-bot md">${marked.parse(text)}</div>`;
-  chatEl().appendChild(w);scroll();
+  const w=document.createElement('div'); w.className='msg-bot';
+  w.innerHTML=`<div class="bot-avatar">SA</div><div class="bubble-bot md">${marked.parse(text)}</div>`;
+  chatEl().appendChild(w); scroll();
 }
-
 function addUser(text){
-  const w=document.createElement("div");
-  w.className="msg-user";
-  w.innerHTML=`<div class="bubble-user md">${marked.parse(text)}</div>`;
-  chatEl().appendChild(w);scroll();
+  const w=document.createElement('div'); w.className='msg-user';
+  w.innerHTML=`<div class="bubble-user">${esc(text)}</div>`;
+  chatEl().appendChild(w); scroll();
 }
-
 function addError(text){
-  const w=document.createElement("div");
+  const w=document.createElement('div');
   w.innerHTML=`<div class="err-bubble">⚠ ${esc(text)}</div>`;
-  chatEl().appendChild(w);scroll();
+  chatEl().appendChild(w); scroll();
 }
-
 function addTyping(text){
-  const w=document.createElement("div");
-  w.id="typing";w.className="typing-row";
-  w.innerHTML=`<span>${esc(text||"Procesando")}</span><span class="dot"></span><span class="dot"></span><span class="dot"></span>`;
-  chatEl().appendChild(w);scroll();
+  const w=document.createElement('div'); w.id='typing'; w.className='typing-row';
+  w.innerHTML=`<span>${esc(text||'Procesando')}</span><span class="dot"></span><span class="dot"></span><span class="dot"></span>`;
+  chatEl().appendChild(w); scroll();
 }
-function removeTyping(){document.getElementById("typing")?.remove()}
+function removeTyping(){document.getElementById('typing')?.remove()}
+
+function buildPaperCard(p,i,full,highlight){
+  const isArxiv=p.source==='ArXiv';
+  const cites=parseInt(p.citations)||0;
+  const isTopCited=cites>=50;
+  const card=document.createElement('div');
+  card.className='paper-card'+(highlight?' highlighted':'')+(isTopCited?' top-cited':'');
+  const abstract=p.abstract?`<p class="paper-abstract">${esc(full?p.abstract:p.abstract.substring(0,300))}${(!full&&p.abstract.length>300)?'…':''}</p>`:'';
+  const kw=p.keywords?`<p style="font-size:.68rem;color:var(--faint);margin-top:.3rem">🏷 ${esc(p.keywords.substring(0,120))}</p>`:'';
+  card.innerHTML=`
+    <div style="display:flex;gap:.5rem;align-items:flex-start">
+      <span class="paper-num">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;min-width:0">
+        <a class="paper-title" href="${p.url||'#'}" target="_blank" rel="noopener">${esc(p.title)}</a>
+        <p class="paper-authors">${esc(p.authors||'')}${p.year?' · '+esc(p.year):''}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin:.4rem 0">
+          <span class="badge ${isArxiv?'b-arxiv':'b-scholar'}">${esc(p.source)}</span>
+          ${cites?`<span class="badge b-blue">📊 ${cites} citas</span>`:''}
+          ${p.open_access==='Sí'?'<span class="badge b-green">🔓 Open Access</span>':''}
+          ${p.journal?`<span class="badge b-gray">${esc(p.journal.substring(0,30))}${p.journal.length>30?'…':''}</span>`:''}
+          ${p.doi?'<span class="badge b-amber">DOI</span>':''}
+          ${isTopCited?'<span class="badge b-amber">⭐ Muy citado</span>':''}
+        </div>
+        ${abstract}${kw}
+        <div class="paper-links">
+          ${p.url?`<a class="paper-link" href="${p.url}" target="_blank" rel="noopener">Ver artículo →</a>`:''}
+          ${p.pdf_url?`<a class="paper-link pdf" href="${p.pdf_url}" target="_blank" rel="noopener">⬇ PDF</a>`:''}
+          ${p.doi?`<a class="paper-link doi-link" href="https://doi.org/${p.doi}" target="_blank" rel="noopener">DOI ↗</a>`:''}
+        </div>
+      </div>
+    </div>`;
+  return card;
+}
 
 function addPapers(papers){
   if(!papers.length)return;
-  const wrap=document.createElement("div");
-  wrap.className="papers-wrap";
-  wrap.innerHTML=`<p class="papers-label">${papers.length} artículos encontrados</p>`;
-  papers.forEach((p,i)=>{
-    const isArxiv=p.source==="ArXiv";
-    const card=document.createElement("div");
-    card.className="paper-card";
-    card.innerHTML=`
-      <div style="display:flex;gap:.5rem;align-items:flex-start">
-        <span class="paper-num">${i+1}</span>
-        <div style="flex:1;min-width:0">
-          <a class="paper-title" href="${p.url||"#"}" target="_blank" rel="noopener">${esc(p.title)}</a>
-          <p class="paper-authors">${esc(p.authors||"")}${p.year?" · "+esc(p.year):""}</p>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin:.4rem 0">
-            <span class="badge ${isArxiv?"b-arxiv":"b-scholar"}">${esc(p.source)}</span>
-            ${p.citations&&p.citations!=="N/D"?`<span class="badge b-blue">📊 ${esc(p.citations)} citas</span>`:""}
-            ${p.open_access==="Sí"?`<span class="badge b-green">🔓 Open</span>`:""}
-            ${p.journal?`<span class="badge b-gray">${esc(p.journal.substring(0,28))}${p.journal.length>28?"…":""}</span>`:""}
-            ${p.doi?`<span class="badge b-gold">DOI</span>`:""}
-          </div>
-          ${p.abstract?`<p class="paper-abstract">${esc(p.abstract.substring(0,200))}${p.abstract.length>200?"…":""}</p>`:""}
-          <div class="paper-links">
-            ${p.url?`<a class="paper-link" href="${p.url}" target="_blank" rel="noopener">Ver artículo →</a>`:""}
-            ${p.pdf_url?`<a class="paper-link" href="${p.pdf_url}" target="_blank" rel="noopener" style="color:var(--gold)">PDF ↓</a>`:""}
-          </div>
-        </div>
-      </div>`;
-    wrap.appendChild(card);
-  });
-  chatEl().appendChild(wrap);scroll();
+  const wrap=document.createElement('div'); wrap.className='papers-wrap';
+  wrap.innerHTML=`<p class="papers-label">✨ ${papers.length} artículos encontrados</p>`;
+  papers.forEach((p,i)=>wrap.appendChild(buildPaperCard(p,i,false,i<3)));
+  chatEl().appendChild(wrap); scroll();
 }
 
 function addMatrix(md){
-  const wrap=document.createElement("div");
-  wrap.className="matrix-card";
+  const wrap=document.createElement('div'); wrap.className='matrix-card';
   wrap.innerHTML=`
     <div class="matrix-header">
       <span class="matrix-title">📊 Matriz Bibliográfica</span>
-      <a class="dl-btn" href="/api/download/xlsx/${sessionId}" target="_blank">↓ XLSX</a>
+      <a class="dl-btn" href="/api/download/xlsx/${sessionId}" target="_blank">⬇ Descargar XLSX</a>
     </div>
     <div class="matrix-body md">${marked.parse(md)}</div>`;
-  chatEl().appendChild(wrap);scroll();
+  chatEl().appendChild(wrap); scroll();
 }
 
-// ── Stage progress ─────────────────────────────────────────────────────
+/* ─── Stage stepper ───────────────────────────────────────────────────── */
 function setStage(stage){
   const idx=STEPS.indexOf(stage);
   STEPS.forEach((s,i)=>{
-    const el=document.getElementById("step-"+s);
-    if(!el)return;
-    el.classList.remove("active","done");
-    if(i<idx)el.classList.add("done");
-    else if(i===idx)el.classList.add("active");
-    const ln=document.getElementById("ln-"+i);
-    if(ln)ln.classList.toggle("done",i<idx);
+    const el=document.getElementById('step-'+s); if(!el)return;
+    el.classList.remove('active','done');
+    if(i<idx)el.classList.add('done');
+    else if(i===idx)el.classList.add('active');
+    const ln=document.getElementById('ln-'+i);
+    if(ln)ln.classList.toggle('done',i<idx);
   });
-  const tip=TIPS[stage];
-  if(tip){
-    document.getElementById("clippy-msg").textContent=tip;
-    showBubble();
+}
+
+/* ─── Utils ───────────────────────────────────────────────────────────── */
+function show(id){document.getElementById(id).style.display=''}
+function hide(id){document.getElementById(id).style.display='none'}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GRAPH PAGE
+═══════════════════════════════════════════════════════════════════════ */
+function renderGraph(){
+  if(!globalPapers.length){
+    document.getElementById('graph-empty').style.display='flex';
+    document.getElementById('graph-loaded').style.display='none';
+    return;
+  }
+  document.getElementById('graph-empty').style.display='none';
+  document.getElementById('graph-loaded').style.display='block';
+  buildForceGraph();
+  buildHeatmap();
+}
+
+function buildForceGraph(){
+  const svgEl=document.getElementById('graph-svg');
+  const svg=d3.select(svgEl);
+  svg.selectAll('*').remove();
+
+  const W=svgEl.clientWidth||600, H=svgEl.clientHeight||480;
+  const colorBy=document.getElementById('graph-color-by').value;
+
+  const nodes=globalPapers.map((p,i)=>({
+    id:i,title:p.title,source:p.source,
+    year:parseInt(p.year)||2020,
+    citations:parseInt(p.citations)||0,
+    abstract:(p.abstract||'').substring(0,200),
+    authors:p.authors||'',url:p.url||'',
+    kw:(p.keywords||'').toLowerCase().split(',').map(k=>k.trim()).filter(k=>k.length>2)
+  }));
+
+  const links=[];
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const shared=nodes[i].kw.filter(k=>nodes[j].kw.includes(k));
+      if(shared.length>0) links.push({source:i,target:j,weight:shared.length});
+    }
+  }
+
+  const years=[...new Set(nodes.map(n=>n.year))].sort();
+  const colorSeq=d3.scaleSequential(d3.interpolateBlues).domain([Math.min(...years)-1,Math.max(...years)+1]);
+  const getColor=n=>colorBy==='source'?(n.source==='ArXiv'?'#0EA5E9':'#7C3AED'):colorSeq(n.year);
+
+  // Legend
+  const leg=document.getElementById('graph-legend'); leg.innerHTML='';
+  if(colorBy==='source'){
+    [['ArXiv','#0EA5E9'],['Google Scholar','#7C3AED']].forEach(([lbl,col])=>{
+      const it=document.createElement('div'); it.className='legend-item';
+      it.innerHTML=`<div class="legend-dot" style="background:${col}"></div>${lbl}`;
+      leg.appendChild(it);
+    });
+  } else {
+    const it=document.createElement('div'); it.className='legend-item';
+    it.innerHTML=`<span>📅 ${Math.min(...years)} → ${Math.max(...years)}</span>`;
+    leg.appendChild(it);
+  }
+
+  const g=svg.append('g');
+  const zoom=d3.zoom().scaleExtent([.3,5]).on('zoom',e=>g.attr('transform',e.transform));
+  svg.call(zoom); d3Zoom=zoom;
+
+  const maxW=Math.max(...links.map(l=>l.weight),1);
+  const rScale=d=>6+Math.sqrt(d.citations/Math.max(...nodes.map(n=>n.citations),1))*12;
+
+  const link=g.append('g').selectAll('line').data(links).join('line')
+    .attr('stroke','#CBD5E1').attr('stroke-width',d=>1+d.weight/maxW*2.5).attr('stroke-opacity',.55);
+
+  const node=g.append('g').selectAll('g').data(nodes).join('g').attr('cursor','pointer')
+    .call(d3.drag()
+      .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y})
+      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y})
+      .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null})
+    );
+
+  node.append('circle')
+    .attr('r',rScale).attr('fill',getColor)
+    .attr('stroke','#fff').attr('stroke-width',1.5).attr('opacity',.88);
+
+  node.append('text')
+    .text(d=>{const w=d.title.split(' ');return w.slice(0,2).join(' ')+(w.length>2?'…':'')})
+    .attr('font-size','8px').attr('font-family','Inter,sans-serif')
+    .attr('fill','#334155').attr('text-anchor','middle')
+    .attr('dy','2.2em').attr('pointer-events','none');
+
+  const tooltip=document.getElementById('graph-tooltip');
+  node.on('mouseover',(e,d)=>{
+    tooltip.style.display='block';
+    tooltip.style.left=(e.offsetX+14)+'px'; tooltip.style.top=(e.offsetY-8)+'px';
+    tooltip.textContent=d.title.substring(0,90)+(d.title.length>90?'…':'');
+  }).on('mousemove',e=>{
+    tooltip.style.left=(e.offsetX+14)+'px'; tooltip.style.top=(e.offsetY-8)+'px';
+  }).on('mouseout',()=>tooltip.style.display='none')
+  .on('click',(e,d)=>{
+    const card=document.getElementById('paper-detail');
+    card.classList.add('visible');
+    document.getElementById('paper-detail-content').innerHTML=`
+      <a href="${d.url}" target="_blank" rel="noopener"
+         style="font-size:.82rem;font-weight:700;color:var(--blue);text-decoration:none;line-height:1.35;display:block;margin-bottom:.4rem">${esc(d.title)}</a>
+      <p style="font-size:.7rem;color:var(--muted);margin-bottom:.4rem">${esc(d.authors)} · ${d.year||''}</p>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.5rem">
+        <span class="badge ${d.source==='ArXiv'?'b-arxiv':'b-scholar'}">${esc(d.source)}</span>
+        ${d.citations?`<span class="badge b-blue">📊 ${d.citations} citas</span>`:''}
+      </div>
+      ${d.abstract?`<p style="font-size:.72rem;color:var(--muted);line-height:1.55">${esc(d.abstract)}…</p>`:''}
+    `;
+  });
+
+  const sim=d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(links).id(d=>d.id).distance(90).strength(.25))
+    .force('charge',d3.forceManyBody().strength(-90))
+    .force('center',d3.forceCenter(W/2,H/2))
+    .force('collision',d3.forceCollide(d=>rScale(d)+5))
+    .on('tick',()=>{
+      link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+          .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      node.attr('transform',d=>`translate(${d.x},${d.y})`);
+    });
+  d3Sim=sim;
+}
+
+function resetGraphZoom(){
+  if(d3Zoom) d3.select('#graph-svg').call(d3Zoom.transform,d3.zoomIdentity);
+}
+
+function buildHeatmap(){
+  const canvas=document.getElementById('heatmap-canvas');
+  const papers=globalPapers;
+  const n=papers.length;
+  const cell=Math.max(8,Math.min(18,Math.floor(280/n)));
+  canvas.width=n*cell; canvas.height=n*cell;
+  const ctx=canvas.getContext('2d');
+
+  const kws=papers.map(p=>new Set((p.keywords||'').toLowerCase().split(',').map(k=>k.trim()).filter(k=>k.length>2)));
+
+  for(let i=0;i<n;i++){
+    for(let j=0;j<n;j++){
+      let sim=0;
+      if(i===j){ sim=1; }
+      else {
+        const union=new Set([...kws[i],...kws[j]]);
+        if(union.size>0){
+          const inter=new Set([...kws[i]].filter(k=>kws[j].has(k)));
+          sim=inter.size/union.size;
+        }
+      }
+      if(i===j) ctx.fillStyle='#1D4ED8';
+      else if(sim>0) ctx.fillStyle=`rgba(29,78,216,${0.1+sim*0.9})`;
+      else ctx.fillStyle='#F0F6FF';
+      ctx.fillRect(j*cell,i*cell,cell,cell);
+      ctx.strokeStyle='#fff'; ctx.lineWidth=.5;
+      ctx.strokeRect(j*cell,i*cell,cell,cell);
+    }
   }
 }
 
-// ── Clippy ─────────────────────────────────────────────────────────────
-function toggleBubble(){bubbleVis?hideBubble():showBubble()}
-function showBubble(){bubbleVis=true;document.getElementById("clippy-bubble").style.display=""}
-function hideBubble(){bubbleVis=false;document.getElementById("clippy-bubble").style.display="none"}
+/* ═══════════════════════════════════════════════════════════════════════
+   STATS PAGE
+═══════════════════════════════════════════════════════════════════════ */
+function renderStats(){
+  if(!globalPapers.length){
+    document.getElementById('stats-empty').style.display='flex';
+    document.getElementById('stats-loaded').style.display='none';
+    return;
+  }
+  document.getElementById('stats-empty').style.display='none';
+  document.getElementById('stats-loaded').style.display='block';
 
-// ── Utilities ──────────────────────────────────────────────────────────
-function show(id){document.getElementById(id).style.display=""}
-function hide(id){document.getElementById(id).style.display="none"}
-function esc(s){
-  return String(s||"")
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const ps=globalPapers;
+  const arxiv=ps.filter(p=>p.source==='ArXiv').length;
+  const scholar=ps.filter(p=>p.source==='Google Scholar').length;
+  const totalCites=ps.reduce((a,p)=>a+(parseInt(p.citations)||0),0);
+
+  document.getElementById('stat-total').textContent=ps.length;
+  document.getElementById('stat-arxiv').textContent=arxiv;
+  document.getElementById('stat-scholar').textContent=scholar;
+  document.getElementById('stat-cites').textContent=totalCites.toLocaleString();
+
+  Object.values(chartInst).forEach(c=>c.destroy()); chartInst={};
+
+  chartInst.src=new Chart(document.getElementById('chart-source'),{
+    type:'doughnut',
+    data:{labels:['ArXiv','Google Scholar'],datasets:[{data:[arxiv,scholar],backgroundColor:['#0EA5E9','#7C3AED'],borderColor:['#fff','#fff'],borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{family:'Inter',size:11}}}}}
+  });
+
+  const yc={};
+  ps.forEach(p=>{if(p.year)yc[p.year]=(yc[p.year]||0)+1});
+  const yrs=Object.keys(yc).sort();
+  chartInst.yr=new Chart(document.getElementById('chart-year'),{
+    type:'bar',
+    data:{labels:yrs,datasets:[{label:'Papers',data:yrs.map(y=>yc[y]),backgroundColor:'#3B82F6',borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'},ticks:{font:{family:'Inter',size:10}}},x:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}}}}
+  });
+
+  const kwc={};
+  ps.forEach(p=>{(p.keywords||'').toLowerCase().split(',').map(k=>k.trim()).filter(k=>k.length>3).forEach(k=>{kwc[k]=(kwc[k]||0)+1})});
+  const topKw=Object.entries(kwc).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  chartInst.kw=new Chart(document.getElementById('chart-keywords'),{
+    type:'bar',
+    data:{labels:topKw.map(([k])=>k),datasets:[{label:'Frecuencia',data:topKw.map(([,v])=>v),backgroundColor:'#0EA5E9',borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#F1F5F9'},ticks:{font:{family:'Inter',size:10}}},y:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}}}}
+  });
+
+  const buckets=[0,0,0,0,0];
+  ps.forEach(p=>{
+    const c=parseInt(p.citations)||0;
+    if(c>=500)buckets[4]++; else if(c>=100)buckets[3]++; else if(c>=50)buckets[2]++; else if(c>=10)buckets[1]++; else buckets[0]++;
+  });
+  chartInst.cd=new Chart(document.getElementById('chart-cites-dist'),{
+    type:'bar',
+    data:{labels:['0-9','10-49','50-99','100-499','500+'],datasets:[{label:'Papers',data:buckets,backgroundColor:['#DBEAFE','#BFDBFE','#93C5FD','#3B82F6','#1D4ED8'],borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'},ticks:{font:{family:'Inter',size:10}}},x:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}}}}
+  });
 }
-function autoResize(el){
-  el.style.height="auto";
-  el.style.height=Math.min(el.scrollHeight,120)+"px";
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EXPLORER PAGE
+═══════════════════════════════════════════════════════════════════════ */
+function renderExplorer(){
+  if(!globalPapers.length){
+    document.getElementById('explorer-empty').style.display='flex';
+    document.getElementById('explorer-loaded').style.display='none';
+    return;
+  }
+  document.getElementById('explorer-empty').style.display='none';
+  document.getElementById('explorer-loaded').style.display='flex';
+  filterExplorer();
+}
+
+function filterExplorer(){
+  const q=(document.getElementById('exp-search')?.value||'').toLowerCase();
+  const src=document.getElementById('exp-source')?.value||'';
+  const sort=document.getElementById('exp-sort')?.value||'default';
+
+  let ps=[...globalPapers];
+  if(q) ps=ps.filter(p=>(p.title||'').toLowerCase().includes(q)||(p.authors||'').toLowerCase().includes(q)||(p.keywords||'').toLowerCase().includes(q));
+  if(src) ps=ps.filter(p=>p.source===src);
+  if(sort==='year-desc') ps.sort((a,b)=>(parseInt(b.year)||0)-(parseInt(a.year)||0));
+  else if(sort==='year-asc') ps.sort((a,b)=>(parseInt(a.year)||0)-(parseInt(b.year)||0));
+  else if(sort==='citations') ps.sort((a,b)=>(parseInt(b.citations)||0)-(parseInt(a.citations)||0));
+
+  const container=document.getElementById('explorer-papers');
+  container.innerHTML='';
+  if(!ps.length){
+    container.innerHTML='<div class="empty-state"><p>Sin resultados para los filtros seleccionados.</p></div>';
+    return;
+  }
+  ps.forEach((p,i)=>{
+    const origIdx=globalPapers.indexOf(p);
+    container.appendChild(buildPaperCard(p,origIdx,true,origIdx<3));
+  });
 }
 
 init();

@@ -17,7 +17,7 @@ def get_llm(temperature: float = 0.3):
     return ChatOllama(
         model=MODEL,
         temperature=temperature,
-        num_predict=2048,
+        num_predict=4096,
         base_url=OLLAMA_URL,
     )
 
@@ -124,10 +124,10 @@ def node_adjust_equation(state: ResearchState):
     # UI sends {"equation": "...", "count": 10}  or a plain string
     if isinstance(user_response, dict):
         eq_text = user_response.get("equation", "confirmar")
-        paper_count = max(1, min(20, int(user_response.get("count", 5))))
+        paper_count = max(1, min(25, int(user_response.get("count", 10))))
     else:
         eq_text = str(user_response)
-        paper_count = 5
+        paper_count = 10
 
     confirm_words = {
         "confirmar", "confirm", "ok", "sí", "si", "yes",
@@ -196,14 +196,21 @@ def node_generate_matrix(state: ResearchState):
         f"ARTÍCULOS ACADÉMICOS:\n{papers_json}\n\n"
         f"FORMATO SOLICITADO:\n{state['matrix_format']}\n\n"
         "INSTRUCCIONES:\n"
-        "1. Genera la matriz como tabla Markdown bien estructurada\n"
-        "2. Incluye TODOS los artículos\n"
-        "3. Si falta información, escribe N/D\n"
-        "4. Máximo 2 frases por celda; sé conciso\n"
-        "5. Incluye siempre DOI y Citas si están disponibles\n"
-        "6. Al final añade ## Análisis General con 4-5 observaciones sobre tendencias, "
-        "brechas identificadas y recomendaciones de lectura\n\n"
-        "Genera la matriz:"
+        "1. Genera la matriz como tabla Markdown completa y bien estructurada\n"
+        "2. Incluye TODOS los artículos sin excepción\n"
+        "3. Si falta información usa N/D, pero intenta inferir datos del abstract\n"
+        "4. Escribe celdas DETALLADAS: 3-5 frases por celda descriptiva; sé específico y técnico\n"
+        "5. En celdas de metodología: describe el enfoque, arquitectura o técnica en detalle\n"
+        "6. En celdas de resultados: incluye métricas numéricas exactas cuando existan\n"
+        "7. En celdas de limitaciones: identifica al menos 2-3 limitaciones concretas del trabajo\n"
+        "8. Incluye siempre DOI y Citas cuando estén disponibles\n"
+        "9. Al final añade ## Análisis General con las siguientes secciones:\n"
+        "   - **Tendencias dominantes**: al menos 5 observaciones sobre patrones y enfoques emergentes\n"
+        "   - **Brechas identificadas**: gaps de investigación no cubiertos por la literatura actual\n"
+        "   - **Convergencias metodológicas**: técnicas o frameworks compartidos entre estudios\n"
+        "   - **Evolución temporal**: cómo ha evolucionado el campo entre los años de los artículos\n"
+        "   - **Recomendaciones de lectura**: prioridad de lectura justificada con criterios bibliométricos\n\n"
+        "Genera la matriz completa y detallada:"
     )
     response = llm.invoke(prompt)
     return {"matrix": response.content, "stage": "qa"}

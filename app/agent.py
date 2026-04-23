@@ -1,6 +1,8 @@
 import json
 import os
+import threading
 
+from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph
@@ -8,6 +10,22 @@ from langgraph.types import Command, interrupt  # noqa: F401
 
 from app.state import MATRIX_TEMPLATES, ResearchState
 from app.tools import search_arxiv, search_scholar
+
+# ---------------------------------------------------------------------------
+# Matrix streaming registry  (session_id → (asyncio.Queue, event_loop))
+# ---------------------------------------------------------------------------
+_matrix_streams: dict = {}
+_stream_lock = threading.Lock()
+
+
+def _reg_stream(tid: str, q, loop) -> None:
+    with _stream_lock:
+        _matrix_streams[tid] = (q, loop)
+
+
+def _unreg_stream(tid: str) -> None:
+    with _stream_lock:
+        _matrix_streams.pop(tid, None)
 
 MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -150,7 +168,12 @@ def node_fetch_papers(state: ResearchState):
     equation = state["search_equation"]
     arxiv_papers = search_arxiv(equation, max_results=count)
     scholar_papers = search_scholar(equation, max_results=count)
-    return {"papers": arxiv_papers + scholar_papers, "stage": "ask_matrix"}
+    all_papers = arxiv_papers + scholar_papers
+    valid = [
+        p for p in all_papers
+        if p.get("title") and len(p["title"]) > 5 and p.get("abstract", "")
+    ]
+    return {"papers": valid if valid else all_papers, "stage": "ask_matrix"}
 
 
 def node_ask_matrix(state: ResearchState):
@@ -188,7 +211,7 @@ def node_ask_matrix(state: ResearchState):
     }
 
 
-def node_generate_matrix(state: ResearchState):
+def node_generate_matrix(state: ResearchState, config: RunnableConfig = None):
     llm = get_llm()
     papers_json = json.dumps(state["papers"], ensure_ascii=False, indent=2)
     prompt = (
@@ -198,7 +221,7 @@ def node_generate_matrix(state: ResearchState):
         "INSTRUCCIONES:\n"
         "1. Genera la matriz como tabla Markdown completa y bien estructurada\n"
         "2. Incluye TODOS los artículos sin excepción\n"
-        "3. Si falta información usa N/D, pero intenta inferir datos del abstract\n"
+        "3. Si falta información deja la celda vacía, no escribas N/D\n"
         "4. Escribe celdas DETALLADAS: 3-5 frases por celda descriptiva; sé específico y técnico\n"
         "5. En celdas de metodología: describe el enfoque, arquitectura o técnica en detalle\n"
         "6. En celdas de resultados: incluye métricas numéricas exactas cuando existan\n"
@@ -212,8 +235,74 @@ def node_generate_matrix(state: ResearchState):
         "   - **Recomendaciones de lectura**: prioridad de lectura justificada con criterios bibliométricos\n\n"
         "Genera la matriz completa y detallada:"
     )
-    response = llm.invoke(prompt)
-    return {"matrix": response.content, "stage": "qa"}
+
+    tid = (config or {}).get("configurable", {}).get("thread_id", "") if config else ""
+    with _stream_lock:
+        stream_info = _matrix_streams.get(tid)
+
+    full_content = ""
+    if stream_info:
+        q, loop = stream_info
+        try:
+            for chunk in llm.stream(prompt):
+                full_content += chunk.content
+                loop.call_soon_threadsafe(q.put_nowait, chunk.content)
+        finally:
+            loop.call_soon_threadsafe(q.put_nowait, None)
+    else:
+        try:
+            full_content = llm.invoke(prompt).content
+        except Exception:
+            full_content = ""
+
+    return {"matrix": full_content, "stage": "generate_hypotheses"}
+
+
+def node_generate_hypotheses(state: ResearchState):
+    try:
+        llm = ChatOllama(
+            model=MODEL,
+            temperature=0.5,
+            num_predict=1024,
+            base_url=OLLAMA_URL,
+        )
+        papers_json = json.dumps([{
+            "title": p.get("title", ""),
+            "abstract": p.get("abstract", "")[:300],
+            "year": p.get("year", ""),
+            "keywords": p.get("keywords", ""),
+        } for p in state["papers"]], ensure_ascii=False, indent=2)
+
+        prompt = (
+            "Eres un experto en metodología de investigación científica. "
+            "Analiza los artículos y propón hipótesis originales que llenen brechas reales.\n\n"
+            f"TEMA: {state['research_needs']}\n\n"
+            f"ARTÍCULOS:\n{papers_json}\n\n"
+            "Genera exactamente 4 hipótesis de investigación originales y testeables. "
+            "Responde ÚNICAMENTE con un JSON array válido, sin texto adicional:\n"
+            "[\n"
+            "  {\n"
+            '    "hypothesis": "H1: Enunciado claro y testeable",\n'
+            '    "gap": "Brecha que aborda: qué no ha sido estudiado aún",\n'
+            '    "methodology": "Enfoque metodológico sugerido para validarla",\n'
+            '    "novelty": 8\n'
+            "  }\n"
+            "]\n"
+            "novelty: 1 (incremental) a 10 (disruptivo). Solo el JSON array."
+        )
+        response = llm.invoke(prompt)
+        raw = response.content.strip()
+        hypotheses = []
+        try:
+            start = raw.find("[")
+            end = raw.rfind("]") + 1
+            if start >= 0 and end > start:
+                hypotheses = json.loads(raw[start:end])
+        except Exception:
+            pass
+        return {"hypotheses": hypotheses, "stage": "qa"}
+    except Exception:
+        return {"hypotheses": [], "stage": "qa"}
 
 
 def node_qa(state: ResearchState):
@@ -224,6 +313,7 @@ def node_qa(state: ResearchState):
         "stage": "qa",
         "show_matrix": first_call,
         "matrix": state.get("matrix") if first_call else None,
+        "hypotheses": state.get("hypotheses", []) if first_call else None,
         "last_answer": state.get("last_answer") or None,
     })
 
@@ -284,6 +374,7 @@ def _build_graph():
         ("fetch_papers", node_fetch_papers),
         ("ask_matrix", node_ask_matrix),
         ("generate_matrix", node_generate_matrix),
+        ("generate_hypotheses", node_generate_hypotheses),
         ("qa", node_qa),
     ]:
         builder.add_node(name, fn)
@@ -294,7 +385,8 @@ def _build_graph():
     builder.add_edge("adjust_equation", "fetch_papers")
     builder.add_edge("fetch_papers", "ask_matrix")
     builder.add_edge("ask_matrix", "generate_matrix")
-    builder.add_edge("generate_matrix", "qa")
+    builder.add_edge("generate_matrix", "generate_hypotheses")
+    builder.add_edge("generate_hypotheses", "qa")
     builder.add_conditional_edges("qa", lambda _: "qa", {"qa": "qa"})
 
     return builder.compile(checkpointer=MemorySaver())
@@ -312,6 +404,7 @@ INITIAL_STATE: ResearchState = {
     "matrix_template": "",
     "matrix_format": "",
     "matrix": "",
+    "hypotheses": [],
     "chat_history": [],
     "last_answer": "",
 }

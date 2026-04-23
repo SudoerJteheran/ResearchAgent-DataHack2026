@@ -53,40 +53,6 @@ MATRIX_TEMPLATES = [
             "Tiempo o Hardware, Código disponible (Sí/No), Citas, DOI"
         ),
     },
-    {
-        "id": "marco_teorico",
-        "name": "Marco Teórico",
-        "icon": "📚",
-        "description": "Mapeado de conceptos, teorías y definiciones clave",
-        "format": (
-            "Tabla con columnas: Autores, Año, Concepto o Teoría, Definición formal, "
-            "Dimensiones clave, Contexto de aplicación, "
-            "Relación con otros conceptos, Relevancia para el estudio, Citas, DOI"
-        ),
-    },
-    {
-        "id": "tendencias",
-        "name": "Tendencias e Innovación",
-        "icon": "📈",
-        "description": "Evolución temporal y tecnologías emergentes",
-        "format": (
-            "Tabla con columnas: Autores, Año, Tecnología o Innovación, Sector, "
-            "Nivel TRL (1-9), Impacto potencial, Barreras identificadas, "
-            "Oportunidades, Revista o Conferencia, Factor de impacto estimado, DOI"
-        ),
-    },
-    {
-        "id": "meta_analisis",
-        "name": "Meta-análisis",
-        "icon": "🧮",
-        "description": "Síntesis estadística de estudios empíricos",
-        "format": (
-            "Tabla con columnas: Autores, Año, N estudios incluidos, "
-            "Tamaño muestral total, Variable dependiente, Efecto promedio (d/r/OR), "
-            "IC 95%, Heterogeneidad (I²), Sesgo de publicación, "
-            "Calidad metodológica (GRADE), Citas, DOI"
-        ),
-    },
 ]
 
 
@@ -100,5 +66,6 @@ class ResearchState(TypedDict):
     matrix_template: str
     matrix_format: str
     matrix: str
+    hypotheses: List[dict]
     chat_history: List[dict]
     last_answer: str

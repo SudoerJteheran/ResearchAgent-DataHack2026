@@ -1,7 +1,6 @@
 <div align="center">
-  <img src="assets/InvestigIA.svg" alt="InvestigIA Logo" width="160"/>
+  <img src="assets/InvestigIA.svg" alt="InvestigIA Logo" width="500"/>
 
-  # InvestigIA
 
   **Asistente de investigación académica con IA local — DataHack 2026, Reto 3**
 
